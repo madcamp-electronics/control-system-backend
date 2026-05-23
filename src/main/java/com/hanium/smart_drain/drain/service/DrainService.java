@@ -10,5 +10,7 @@ public class DrainService {
 
     private final DrainRepository drainRepository;
 
-    // TODO: 빗물받이 등록/조회/상태 변경 로직 구현 예정
+    // TODO: 빗물받이 등록/조회 로직 구현 예정
+    // TODO: 빗물받이 상태 변경 로직 구현 예정
+    // TODO: 위험도 판단 기준값 관리 로직 구현 예정
 }

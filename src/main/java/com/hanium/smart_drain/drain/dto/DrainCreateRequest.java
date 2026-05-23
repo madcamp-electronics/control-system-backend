@@ -15,4 +15,9 @@ public class DrainCreateRequest {
     private String address;
     private Double latitude;
     private Double longitude;
+    private Double totalDepth;
+    private Double warningWaterLevel;
+    private Double dangerWaterLevel;
+    private Double warningTrashLevel;
+    private Double dangerTrashLevel;
 }

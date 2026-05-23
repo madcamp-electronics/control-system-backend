@@ -31,8 +31,11 @@ public class Alert {
     @Enumerated(EnumType.STRING)
     private AlertType type;
 
+    @Enumerated(EnumType.STRING)
+    private AlertStatus status;
+
     private String message;
-    private Boolean acknowledged;
     private LocalDateTime createdAt;
     private LocalDateTime acknowledgedAt;
+    private LocalDateTime resolvedAt;
 }

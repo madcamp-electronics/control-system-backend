@@ -32,4 +32,10 @@ public class Drain {
 
     @Enumerated(EnumType.STRING)
     private DrainStatus status;
+
+    private Double totalDepth;
+    private Double warningWaterLevel;
+    private Double dangerWaterLevel;
+    private Double warningTrashLevel;
+    private Double dangerTrashLevel;
 }

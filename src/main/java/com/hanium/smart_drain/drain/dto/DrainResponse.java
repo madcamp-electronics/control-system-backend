@@ -18,4 +18,9 @@ public class DrainResponse {
     private Double latitude;
     private Double longitude;
     private DrainStatus status;
+    private Double totalDepth;
+    private Double warningWaterLevel;
+    private Double dangerWaterLevel;
+    private Double warningTrashLevel;
+    private Double dangerTrashLevel;
 }

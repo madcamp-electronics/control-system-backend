@@ -18,4 +18,5 @@ public class LatestSensorReadingResponse {
     private Double batteryLevel;
     private Integer signalStrength;
     private LocalDateTime measuredAt;
+    private LocalDateTime receivedAt;
 }

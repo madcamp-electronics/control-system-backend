@@ -32,4 +32,5 @@ public class SensorReading {
     private Double batteryLevel;
     private Integer signalStrength;
     private LocalDateTime measuredAt;
+    private LocalDateTime receivedAt;
 }
