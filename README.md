@@ -1,31 +1,36 @@
 # Smart Drain Backend
 
 한이음 드림업 프로젝트  
-**실시간 수위 측정 및 이물질 감지 기반 스마트 빗물받이 관제 시스템** 백엔드 저장소입니다.
+**실시간 수위 측정 및 이물질 감지 기반 스마트 빗물받이 관제 시스템** 백엔드입니다.
 
-## 1. 프로젝트 개요
+## 1. 프로젝트 목표
 
-도심 침수 예방을 위해 빗물받이 상태를 실시간 모니터링하고,  
-수위/이물질 적체량 기반 위험 알림을 제공하는 관제 백엔드를 구축합니다.
+- 빗물받이 위치/상태/임계치 기준값 관리
+- IoT 센서 원시 데이터 수집/저장
+- 백엔드 위험도 분석(risk) 기반 알림(alert) 생성
+- 유지보수 작업(maintenance) 생성 및 작업자(worker) 연계
+- 대시보드 통합 조회 API 제공
 
-핵심 목표:
-- 빗물받이 위치/상태 데이터 관리
-- IoT 센서 데이터 수집 및 저장
-- 위험 알림 생성/조회/확인 처리
-- 대시보드용 요약/지도 데이터 API 제공
+## 2. 핵심 도메인 흐름
 
-## 2. 백엔드 기술 스택
+1. 센서는 위험도를 판단하지 않고 원시 측정값만 전송
+2. 백엔드는 `SensorReading` 저장
+3. `risk` 도메인이 `Drain` 임계치와 센서값을 비교해 위험도 판단
+4. 위험 시 `alert` 도메인에서 알림 생성
+5. 필요 시 `maintenance` 도메인에서 작업 생성
+6. 작업자는 작업을 수행하고 전/후 사진 연결
+7. 사진 저장 메타데이터는 `file` 도메인, 작업-사진 관계는 `maintenance`가 관리
 
-- Language: `Java 17`
-- Framework: `Spring Boot 3.5.x`
-- Build Tool: `Gradle 8.14.x`
-- Database: `PostgreSQL`
-- ORM: `Spring Data JPA (Hibernate)`
-- Validation: `Spring Validation`
-- Security: `Spring Security`
-- Realtime (확장 예정): `WebSocket`, `MQTT`
+## 3. 기술 스택
 
-## 3. 패키지 구조
+- Java 17
+- Spring Boot 3.5.x
+- Gradle 8.14.x
+- Spring Data JPA / Hibernate
+- PostgreSQL
+- Spring Security (구조만 준비, 인증 로직은 TODO)
+
+## 4. 패키지 구조
 
 루트 패키지: `com.hanium.smart_drain`
 
@@ -34,7 +39,8 @@ com.hanium.smart_drain
  ├─ global
  │  ├─ config
  │  ├─ exception
- │  └─ response
+ │  ├─ response
+ │  └─ security
  │
  ├─ drain
  │  ├─ controller
@@ -50,9 +56,35 @@ com.hanium.smart_drain
  │  ├─ entity
  │  └─ dto
  │
+ ├─ risk
+ │  ├─ service
+ │  ├─ policy
+ │  └─ dto
+ │
  ├─ alert
  │  ├─ controller
  │  ├─ service
+ │  ├─ repository
+ │  ├─ entity
+ │  └─ dto
+ │
+ ├─ maintenance
+ │  ├─ controller
+ │  ├─ service
+ │  ├─ repository
+ │  ├─ entity
+ │  └─ dto
+ │
+ ├─ worker
+ │  ├─ controller
+ │  ├─ service
+ │  ├─ repository
+ │  ├─ entity
+ │  └─ dto
+ │
+ ├─ file
+ │  ├─ service
+ │  ├─ storage
  │  ├─ repository
  │  ├─ entity
  │  └─ dto
@@ -63,26 +95,36 @@ com.hanium.smart_drain
     └─ dto
 ```
 
-## 4. 현재 구현 범위
+## 5. 현재 구현 상태
 
-현재는 **초기 구조(스켈레톤)** 단계입니다.
+현재는 **확장된 스켈레톤 단계**입니다.
 
-- 도메인별 Entity / DTO / Repository / Service / Controller 골격 생성
-- 공통 응답(`ApiResponse`) 및 전역 예외 처리 기본 구조 생성
-- Ping API 엔드포인트 생성
-- 실제 비즈니스 로직(위험도 계산, 조회 쿼리, 알림 정책)은 미구현
+- Entity/DTO/Repository/Service/Controller 기본 골격 구성
+- `risk` 정책 인터페이스 및 기본 정책 클래스 추가
+- `alert` 상태 분리(`ACTIVE`, `ACKNOWLEDGED`, `RESOLVED`)
+- `maintenance`, `worker`, `file` 도메인 기본 모델 추가
+- 실제 비즈니스 로직/트랜잭션 시나리오/파일 업로드 구현은 TODO
 
-## 5. 실행 환경 설정
+## 6. 설정
 
-`src/main/resources/application.properties`에서 DB 설정을 사용합니다.
+`src/main/resources/application.properties` 사용:
 
 ```properties
+spring.application.name=smart-drain
+
 spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/smart_drain}
 spring.datasource.username=${DB_USERNAME:smart_drain_user}
 spring.datasource.password=${DB_PASSWORD:smart_drain_password}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.show-sql=true
+
+server.port=8080
 ```
 
-필요 시 환경변수로 덮어쓸 수 있습니다.
+환경변수 예시:
 
 ```bash
 export DB_URL=jdbc:postgresql://localhost:5432/smart_drain
@@ -90,33 +132,26 @@ export DB_USERNAME=smart_drain_user
 export DB_PASSWORD=smart_drain_password
 ```
 
-## 6. 로컬 실행
+## 7. 실행
 
 ```bash
-./gradlew clean build
+./gradlew clean build -x test
 ./gradlew bootRun
 ```
 
-앱 실행 후 기본 포트: `8080`
+기본 포트: `8080`
 
-## 7. 기본 API (Health/Ping)
+## 8. Ping API
 
 - `GET /api/drains/ping` → `drain api ok`
 - `GET /api/sensors/ping` → `sensor api ok`
 - `GET /api/alerts/ping` → `alert api ok`
 - `GET /api/dashboard/ping` → `dashboard api ok`
+- `GET /api/maintenance/tasks/ping` → `maintenance api ok`
+- `GET /api/workers/ping` → `worker api ok`
 
-## 8. 향후 확장 계획
+## 9. 보안/운영 원칙
 
-- 유지보수 작업자 배정 워크플로우
-- MQTT 기반 센서 실시간 수신
-- 기상청/외부 날씨 API 연동
-- WebSocket 실시간 알림 푸시
-- PostGIS 기반 공간 검색 및 반경 조회
-
-## 9. Git 보안/운영 가이드
-
-- `.env`, 키/인증서 파일은 `.gitignore`로 제외
-- 실제 운영 비밀번호/토큰은 절대 저장소에 커밋하지 않음
-- 환경변수 또는 별도 시크릿 관리 방식 사용
-
+- `.env`, 인증서/키 파일은 Git에 커밋하지 않음
+- 비밀값은 환경변수 또는 별도 시크릿 저장소에서 주입
+- `application.yml`은 사용하지 않고 `application.properties`만 사용
