@@ -9,6 +9,7 @@ import com.hanium.smart_drain.global.exception.ErrorCode;
 import com.hanium.smart_drain.risk.dto.RiskAnalysisResult;
 import com.hanium.smart_drain.risk.dto.RiskLevel;
 import com.hanium.smart_drain.risk.service.RiskAnalysisService;
+import com.hanium.smart_drain.sensor.dto.SensorHistoryResponse;
 import com.hanium.smart_drain.sensor.dto.SensorReadingIngestResponse;
 import com.hanium.smart_drain.sensor.dto.SensorPhotoUploadResponse;
 import com.hanium.smart_drain.sensor.dto.SensorReadingRequest;
@@ -19,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -106,6 +108,34 @@ public class SensorService {
             .status("SUCCESS")
             .fileUrl(fileUrl)
             .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SensorHistoryResponse> getDrainHistory(
+        Long drainId,
+        LocalDateTime startTime,
+        LocalDateTime endTime
+    ) {
+        if (startTime == null || endTime == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "startTime and endTime are required");
+        }
+        if (startTime.isAfter(endTime)) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "startTime must be before endTime");
+        }
+
+        drainRepository.findById(drainId)
+            .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
+
+        return sensorReadingRepository
+            .findByDrainIdAndMeasuredAtBetweenOrderByMeasuredAtDesc(drainId, startTime, endTime)
+            .stream()
+            .map(reading -> SensorHistoryResponse.builder()
+                .waterLevel(reading.getWaterLevel())
+                .trashLevel(reading.getTrashLevel())
+                .batteryLevel(reading.getBatteryLevel())
+                .measuredAt(reading.getMeasuredAt())
+                .build())
+            .toList();
     }
 
     // TODO: 센서 데이터 수신/저장 로직 구현 예정
