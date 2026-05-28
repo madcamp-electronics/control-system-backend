@@ -15,10 +15,7 @@ import com.hanium.smart_drain.drain.entity.DrainStatus;
 import com.hanium.smart_drain.drain.repository.DrainRepository;
 import com.hanium.smart_drain.global.exception.CustomException;
 import com.hanium.smart_drain.global.exception.ErrorCode;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import com.hanium.smart_drain.global.storage.S3StorageService;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +23,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,10 +33,7 @@ public class AlertService {
 
     private final AlertRepository alertRepository;
     private final DrainRepository drainRepository;
-    @Value("${app.storage.alert-dir:storage/alerts}")
-    private String alertStorageDir;
-    @Value("${app.storage.alert-url-prefix:/storage/alerts}")
-    private String alertUrlPrefix;
+    private final S3StorageService s3StorageService;
 
     public Alert createActiveAlert(Long drainId, AlertType alertType) {
         boolean alreadyActive = alertRepository.existsByDrainIdAndStatusIn(
@@ -122,16 +115,7 @@ public class AlertService {
             .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "alert not found"));
 
         String storedFileName = buildStoredFileName(alertId, photoType, imageFile.getOriginalFilename());
-        Path storagePath = Path.of(alertStorageDir);
-        Path targetPath = storagePath.resolve(storedFileName);
-        try {
-            Files.createDirectories(storagePath);
-            Files.copy(imageFile.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "failed to store image file");
-        }
-
-        String fileUrl = alertUrlPrefix + "/" + storedFileName;
+        String fileUrl = s3StorageService.upload(imageFile, "alerts/" + storedFileName);
         LocalDateTime now = LocalDateTime.now();
         if (photoType == AlertPhotoType.BEFORE) {
             alert.updateBeforePhoto(fileUrl, now);
