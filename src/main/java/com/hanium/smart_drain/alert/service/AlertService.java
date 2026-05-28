@@ -1,6 +1,7 @@
 package com.hanium.smart_drain.alert.service;
 
 import com.hanium.smart_drain.alert.dto.AlertListResponse;
+import com.hanium.smart_drain.alert.dto.AlertCompleteResponse;
 import com.hanium.smart_drain.alert.dto.AlertPhotoType;
 import com.hanium.smart_drain.alert.dto.AlertPhotoUploadResponse;
 import com.hanium.smart_drain.alert.dto.AlertStatusUpdateRequest;
@@ -10,6 +11,7 @@ import com.hanium.smart_drain.alert.entity.AlertStatus;
 import com.hanium.smart_drain.alert.entity.AlertType;
 import com.hanium.smart_drain.alert.repository.AlertRepository;
 import com.hanium.smart_drain.drain.entity.Drain;
+import com.hanium.smart_drain.drain.entity.DrainStatus;
 import com.hanium.smart_drain.drain.repository.DrainRepository;
 import com.hanium.smart_drain.global.exception.CustomException;
 import com.hanium.smart_drain.global.exception.ErrorCode;
@@ -142,6 +144,26 @@ public class AlertService {
             .alertId(alert.getId())
             .fileUrl(fileUrl)
             .photoType(photoType)
+            .build();
+    }
+
+    @Transactional
+    public AlertCompleteResponse completeAlert(Long alertId) {
+        Alert alert = alertRepository.findById(alertId)
+            .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "alert not found"));
+
+        Drain drain = drainRepository.findById(alert.getDrainId())
+            .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
+
+        LocalDateTime now = LocalDateTime.now();
+        alert.complete(now);
+        drain.updateStatus(DrainStatus.NORMAL);
+
+        return AlertCompleteResponse.builder()
+            .alertId(alert.getId())
+            .drainId(alert.getDrainId())
+            .status(alert.getStatus())
+            .resolvedAt(alert.getResolvedAt())
             .build();
     }
 

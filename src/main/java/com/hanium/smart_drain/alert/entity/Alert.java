@@ -72,4 +72,10 @@ public class Alert {
         this.afterPhotoUrl = afterPhotoUrl;
         this.updatedAt = updatedAt;
     }
+
+    public void complete(LocalDateTime resolvedAt) {
+        this.status = AlertStatus.RESOLVED;
+        this.resolvedAt = resolvedAt;
+        this.updatedAt = resolvedAt;
+    }
 }

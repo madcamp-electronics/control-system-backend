@@ -1,6 +1,7 @@
 package com.hanium.smart_drain.alert.controller;
 
 import com.hanium.smart_drain.alert.dto.AlertListResponse;
+import com.hanium.smart_drain.alert.dto.AlertCompleteResponse;
 import com.hanium.smart_drain.alert.dto.AlertPhotoType;
 import com.hanium.smart_drain.alert.dto.AlertPhotoUploadResponse;
 import com.hanium.smart_drain.alert.dto.AlertStatusUpdateRequest;
@@ -57,5 +58,12 @@ public class AlertController {
     ) {
         AlertPhotoUploadResponse response = alertService.uploadAlertPhoto(alertId, imageFile, photoType);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+    }
+
+    @PatchMapping("/{alertId}/complete")
+    public ApiResponse<AlertCompleteResponse> completeAlert(
+        @PathVariable("alertId") Long alertId
+    ) {
+        return ApiResponse.success(alertService.completeAlert(alertId));
     }
 }
