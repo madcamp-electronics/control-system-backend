@@ -3,11 +3,14 @@ package com.hanium.smart_drain.drain.service;
 import com.hanium.smart_drain.drain.dto.DrainCreateRequest;
 import com.hanium.smart_drain.drain.dto.DrainListResponse;
 import com.hanium.smart_drain.drain.dto.DrainResponse;
+import com.hanium.smart_drain.drain.dto.DrainUpdateRequest;
+import com.hanium.smart_drain.drain.dto.DrainUpdateResponse;
 import com.hanium.smart_drain.drain.entity.Drain;
 import com.hanium.smart_drain.drain.entity.DrainStatus;
 import com.hanium.smart_drain.drain.repository.DrainRepository;
 import com.hanium.smart_drain.global.exception.CustomException;
 import com.hanium.smart_drain.global.exception.ErrorCode;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +60,25 @@ public class DrainService {
         Drain drain = drainRepository.findById(drainId)
             .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
         return toResponse(drain);
+    }
+
+    @Transactional
+    public DrainUpdateResponse updateDrain(Long drainId, DrainUpdateRequest request) {
+        Drain drain = drainRepository.findById(drainId)
+            .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
+
+        drain.updateInfo(
+            request.getAddress(),
+            request.getWaterLevelThreshold(),
+            request.getTrashLevelThreshold()
+        );
+
+        return DrainUpdateResponse.builder()
+            .drainId(drain.getId())
+            .waterLevelThreshold(drain.getWaterLevelThreshold())
+            .trashLevelThreshold(drain.getTrashLevelThreshold())
+            .updatedAt(LocalDateTime.now())
+            .build();
     }
 
     private DrainStatus parseDrainStatus(String status) {

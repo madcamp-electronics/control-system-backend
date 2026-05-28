@@ -59,4 +59,10 @@ public class Drain {
     public void updateLatestDevicePhotoUrl(String latestDevicePhotoUrl) {
         this.latestDevicePhotoUrl = latestDevicePhotoUrl;
     }
+
+    public void updateInfo(String address, Double waterLevelThreshold, Double trashLevelThreshold) {
+        this.address = address;
+        this.waterLevelThreshold = waterLevelThreshold;
+        this.trashLevelThreshold = trashLevelThreshold;
+    }
 }

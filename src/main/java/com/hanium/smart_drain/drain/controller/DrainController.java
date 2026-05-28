@@ -3,6 +3,8 @@ package com.hanium.smart_drain.drain.controller;
 import com.hanium.smart_drain.drain.dto.DrainCreateRequest;
 import com.hanium.smart_drain.drain.dto.DrainListResponse;
 import com.hanium.smart_drain.drain.dto.DrainResponse;
+import com.hanium.smart_drain.drain.dto.DrainUpdateRequest;
+import com.hanium.smart_drain.drain.dto.DrainUpdateResponse;
 import com.hanium.smart_drain.drain.service.DrainService;
 import com.hanium.smart_drain.global.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,6 +45,14 @@ public class DrainController {
         @PathVariable("drainId") Long drainId
     ) {
         return ApiResponse.success(drainService.getDrainById(drainId));
+    }
+
+    @PutMapping("/{drainId}")
+    public ApiResponse<DrainUpdateResponse> updateDrain(
+        @PathVariable("drainId") Long drainId,
+        @Valid @RequestBody DrainUpdateRequest request
+    ) {
+        return ApiResponse.success(drainService.updateDrain(drainId, request));
     }
 
     @PostMapping
