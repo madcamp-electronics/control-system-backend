@@ -56,4 +56,20 @@ public class Alert {
 
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;
+
+    public void updateStatusAndWorker(AlertStatus status, Long workerId, LocalDateTime updatedAt) {
+        this.status = status;
+        this.workerId = workerId;
+        this.updatedAt = updatedAt;
+    }
+
+    public void updateBeforePhoto(String beforePhotoUrl, LocalDateTime updatedAt) {
+        this.beforePhotoUrl = beforePhotoUrl;
+        this.updatedAt = updatedAt;
+    }
+
+    public void updateAfterPhoto(String afterPhotoUrl, LocalDateTime updatedAt) {
+        this.afterPhotoUrl = afterPhotoUrl;
+        this.updatedAt = updatedAt;
+    }
 }
