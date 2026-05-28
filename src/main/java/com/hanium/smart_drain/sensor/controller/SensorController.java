@@ -2,10 +2,7 @@ package com.hanium.smart_drain.sensor.controller;
 
 import com.hanium.smart_drain.global.response.ApiResponse;
 import com.hanium.smart_drain.sensor.dto.SensorHistoryResponse;
-import com.hanium.smart_drain.sensor.dto.SensorReadingIngestResponse;
 import com.hanium.smart_drain.sensor.dto.SensorPhotoUploadResponse;
-import com.hanium.smart_drain.sensor.dto.SensorReadingRequest;
-import jakarta.validation.Valid;
 import com.hanium.smart_drain.sensor.service.SensorService;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,14 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class SensorController {
 
     private final SensorService sensorService;
-
-    @PostMapping("/readings")
-    public ResponseEntity<ApiResponse<SensorReadingIngestResponse>> receiveReading(
-        @Valid @RequestBody SensorReadingRequest request
-    ) {
-        SensorReadingIngestResponse response = sensorService.ingestReading(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
-    }
 
     @PostMapping("/photos")
     public ResponseEntity<ApiResponse<SensorPhotoUploadResponse>> uploadPhoto(
