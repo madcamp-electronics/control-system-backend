@@ -30,11 +30,6 @@ public class AlertController {
 
     private final AlertService alertService;
 
-    @GetMapping("/ping")
-    public ApiResponse<String> ping() {
-        return ApiResponse.success("alert api ok");
-    }
-
     @GetMapping
     public ApiResponse<List<AlertListResponse>> getAlerts(
         @RequestParam(value = "status", required = false) String status

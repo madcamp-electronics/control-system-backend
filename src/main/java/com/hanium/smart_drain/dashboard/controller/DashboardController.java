@@ -17,11 +17,6 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    @GetMapping("/ping")
-    public ApiResponse<String> ping() {
-        return ApiResponse.success("dashboard api ok");
-    }
-
     @GetMapping("/markers")
     public ApiResponse<List<DashboardMarkerResponse>> getMarkers() {
         return ApiResponse.success(dashboardService.getMarkers());

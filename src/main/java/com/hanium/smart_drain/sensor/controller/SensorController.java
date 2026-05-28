@@ -29,11 +29,6 @@ public class SensorController {
 
     private final SensorService sensorService;
 
-    @GetMapping("/ping")
-    public ApiResponse<String> ping() {
-        return ApiResponse.success("sensor api ok");
-    }
-
     @PostMapping("/readings")
     public ResponseEntity<ApiResponse<SensorReadingIngestResponse>> receiveReading(
         @Valid @RequestBody SensorReadingRequest request

@@ -29,11 +29,6 @@ public class DrainController {
 
     private final DrainService drainService;
 
-    @GetMapping("/ping")
-    public ApiResponse<String> ping() {
-        return ApiResponse.success("drain api ok");
-    }
-
     @GetMapping
     public ApiResponse<List<DrainListResponse>> getDrains(
         @RequestParam(value = "status", required = false) String status
