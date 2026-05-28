@@ -1,6 +1,7 @@
 package com.hanium.smart_drain.drain.service;
 
 import com.hanium.smart_drain.drain.dto.DrainCreateRequest;
+import com.hanium.smart_drain.drain.dto.DrainListResponse;
 import com.hanium.smart_drain.drain.dto.DrainResponse;
 import com.hanium.smart_drain.drain.entity.Drain;
 import com.hanium.smart_drain.drain.entity.DrainStatus;
@@ -37,7 +38,7 @@ public class DrainService {
     }
 
     @Transactional(readOnly = true)
-    public List<DrainResponse> getDrains(String status) {
+    public List<DrainListResponse> getDrains(String status) {
         List<Drain> drains;
         if (status == null || status.isBlank()) {
             drains = drainRepository.findAll();
@@ -47,8 +48,15 @@ public class DrainService {
         }
 
         return drains.stream()
-            .map(this::toResponse)
+            .map(this::toListResponse)
             .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public DrainResponse getDrainById(Long drainId) {
+        Drain drain = drainRepository.findById(drainId)
+            .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
+        return toResponse(drain);
     }
 
     private DrainStatus parseDrainStatus(String status) {
@@ -61,7 +69,7 @@ public class DrainService {
 
     private DrainResponse toResponse(Drain saved) {
         return DrainResponse.builder()
-            .id(saved.getId())
+            .drainId(saved.getId())
             .address(saved.getAddress())
             .latitude(saved.getLatitude())
             .longitude(saved.getLongitude())
@@ -70,6 +78,17 @@ public class DrainService {
             .waterLevelThreshold(saved.getWaterLevelThreshold())
             .trashLevelThreshold(saved.getTrashLevelThreshold())
             .latestDevicePhotoUrl(saved.getLatestDevicePhotoUrl())
+            .build();
+    }
+
+    private DrainListResponse toListResponse(Drain drain) {
+        return DrainListResponse.builder()
+            .drainId(drain.getId())
+            .address(drain.getAddress())
+            .latitude(drain.getLatitude())
+            .longitude(drain.getLongitude())
+            .status(drain.getStatus())
+            .totalDepth(drain.getTotalDepth())
             .build();
     }
 

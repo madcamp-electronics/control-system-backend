@@ -1,6 +1,7 @@
 package com.hanium.smart_drain.drain.controller;
 
 import com.hanium.smart_drain.drain.dto.DrainCreateRequest;
+import com.hanium.smart_drain.drain.dto.DrainListResponse;
 import com.hanium.smart_drain.drain.dto.DrainResponse;
 import com.hanium.smart_drain.drain.service.DrainService;
 import com.hanium.smart_drain.global.response.ApiResponse;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,10 +31,17 @@ public class DrainController {
     }
 
     @GetMapping
-    public ApiResponse<List<DrainResponse>> getDrains(
+    public ApiResponse<List<DrainListResponse>> getDrains(
         @RequestParam(value = "status", required = false) String status
     ) {
         return ApiResponse.success(drainService.getDrains(status));
+    }
+
+    @GetMapping("/{drainId}")
+    public ApiResponse<DrainResponse> getDrainDetail(
+        @PathVariable("drainId") Long drainId
+    ) {
+        return ApiResponse.success(drainService.getDrainById(drainId));
     }
 
     @PostMapping

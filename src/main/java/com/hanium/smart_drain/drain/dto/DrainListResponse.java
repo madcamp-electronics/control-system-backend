@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DrainResponse {
+public class DrainListResponse {
 
     private Long drainId;
     private String address;
@@ -18,7 +18,4 @@ public class DrainResponse {
     private Double longitude;
     private DrainStatus status;
     private Double totalDepth;
-    private Double waterLevelThreshold;
-    private Double trashLevelThreshold;
-    private String latestDevicePhotoUrl;
 }
