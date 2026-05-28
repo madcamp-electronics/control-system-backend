@@ -6,6 +6,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -23,19 +24,39 @@ public class Drain {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "drain_id")
     private Long id;
 
-    private String name;
+    @Column(nullable = false)
     private String address;
+
+    @Column(nullable = false)
     private Double latitude;
+
+    @Column(nullable = false)
     private Double longitude;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private DrainStatus status;
 
+    @Column(nullable = false)
     private Double totalDepth;
-    private Double warningWaterLevel;
-    private Double dangerWaterLevel;
-    private Double warningTrashLevel;
-    private Double dangerTrashLevel;
+
+    @Column(name = "water_level_threshold", nullable = false)
+    private Double waterLevelThreshold;
+
+    @Column(name = "trash_level_threshold", nullable = false)
+    private Double trashLevelThreshold;
+
+    @Column(name = "latest_device_photo_url")
+    private String latestDevicePhotoUrl;
+
+    public void updateStatus(DrainStatus status) {
+        this.status = status;
+    }
+
+    public void updateLatestDevicePhotoUrl(String latestDevicePhotoUrl) {
+        this.latestDevicePhotoUrl = latestDevicePhotoUrl;
+    }
 }

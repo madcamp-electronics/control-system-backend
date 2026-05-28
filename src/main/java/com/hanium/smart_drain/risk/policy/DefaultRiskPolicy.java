@@ -22,7 +22,6 @@ public class DefaultRiskPolicy implements RiskPolicy {
                 .riskLevel(RiskLevel.NORMAL)
                 .message("drain not found")
                 .needAlert(false)
-                .needMaintenanceTask(false)
                 .build();
         }
 
@@ -36,40 +35,26 @@ public class DefaultRiskPolicy implements RiskPolicy {
                 .alertType(AlertType.SENSOR_ERROR)
                 .message("sensor health check required")
                 .needAlert(true)
-                .needMaintenanceTask(false)
                 .build();
         }
 
-        if (isAtOrAbove(waterLevel, drain.getDangerWaterLevel())) {
+        if (isAtOrAbove(waterLevel, drain.getWaterLevelThreshold())) {
             return RiskAnalysisResult.builder()
                 .drainId(drainId)
                 .riskLevel(RiskLevel.FLOOD_RISK)
                 .alertType(AlertType.FLOOD_RISK)
                 .message("flood risk detected")
                 .needAlert(true)
-                .needMaintenanceTask(true)
                 .build();
         }
 
-        if (isAtOrAbove(trashLevel, drain.getDangerTrashLevel())) {
+        if (isAtOrAbove(trashLevel, drain.getTrashLevelThreshold())) {
             return RiskAnalysisResult.builder()
                 .drainId(drainId)
                 .riskLevel(RiskLevel.NEED_INSPECTION)
                 .alertType(AlertType.NEED_INSPECTION)
-                .message("trash level exceeds danger threshold")
+                .message("trash level exceeds threshold")
                 .needAlert(true)
-                .needMaintenanceTask(true)
-                .build();
-        }
-
-        if (isAtOrAbove(waterLevel, drain.getWarningWaterLevel())) {
-            return RiskAnalysisResult.builder()
-                .drainId(drainId)
-                .riskLevel(RiskLevel.NEED_INSPECTION)
-                .alertType(AlertType.NEED_INSPECTION)
-                .message("water level exceeds warning threshold")
-                .needAlert(true)
-                .needMaintenanceTask(true)
                 .build();
         }
 
@@ -78,7 +63,6 @@ public class DefaultRiskPolicy implements RiskPolicy {
             .riskLevel(RiskLevel.NORMAL)
             .message("normal")
             .needAlert(false)
-            .needMaintenanceTask(false)
             .build();
     }
 

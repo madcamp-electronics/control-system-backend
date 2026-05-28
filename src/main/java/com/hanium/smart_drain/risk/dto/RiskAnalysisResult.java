@@ -17,5 +17,4 @@ public class RiskAnalysisResult {
     private AlertType alertType;
     private String message;
     private boolean needAlert;
-    private boolean needMaintenanceTask;
 }

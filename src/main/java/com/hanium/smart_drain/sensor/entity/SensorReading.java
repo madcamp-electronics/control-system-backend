@@ -1,5 +1,6 @@
 package com.hanium.smart_drain.sensor.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,15 +23,23 @@ public class SensorReading {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "reading_id")
+    private Long readingId;
 
     // TODO: 추후 필요 시 Drain 엔티티와 @ManyToOne 연관관계로 변경 검토
+    @Column(name = "drain_id", nullable = false)
     private Long drainId;
 
+    @Column(nullable = false)
     private Double waterLevel;
+    @Column(nullable = false)
     private Double trashLevel;
+    @Column(nullable = false)
     private Double batteryLevel;
+    @Column(nullable = false)
     private Integer signalStrength;
+    @Column(nullable = false)
     private LocalDateTime measuredAt;
+    @Column(nullable = false)
     private LocalDateTime receivedAt;
 }

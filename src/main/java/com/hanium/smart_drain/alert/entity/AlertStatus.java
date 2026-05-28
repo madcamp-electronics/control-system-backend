@@ -2,6 +2,6 @@ package com.hanium.smart_drain.alert.entity;
 
 public enum AlertStatus {
     ACTIVE,
-    ACKNOWLEDGED,
+    PROCESSING,
     RESOLVED
 }

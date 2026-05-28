@@ -15,8 +15,6 @@ public class DashboardSummaryResponse {
     private Long normalCount;
     private Long needInspectionCount;
     private Long floodRiskCount;
-    private Long underMaintenanceCount;
     private Long activeAlertCount;
-    private Long pendingTaskCount;
-    private Long inProgressTaskCount;
+    private Long processingAlertCount;
 }

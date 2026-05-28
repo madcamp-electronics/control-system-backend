@@ -1,14 +1,24 @@
 package com.hanium.smart_drain.sensor.controller;
 
 import com.hanium.smart_drain.global.response.ApiResponse;
+import com.hanium.smart_drain.sensor.dto.SensorReadingIngestResponse;
+import com.hanium.smart_drain.sensor.dto.SensorPhotoUploadResponse;
+import com.hanium.smart_drain.sensor.dto.SensorReadingRequest;
+import jakarta.validation.Valid;
 import com.hanium.smart_drain.sensor.service.SensorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/sensors")
+@RequestMapping("/api/v1/sensors")
 @RequiredArgsConstructor
 public class SensorController {
 
@@ -17,5 +27,22 @@ public class SensorController {
     @GetMapping("/ping")
     public ApiResponse<String> ping() {
         return ApiResponse.success("sensor api ok");
+    }
+
+    @PostMapping("/readings")
+    public ResponseEntity<ApiResponse<SensorReadingIngestResponse>> receiveReading(
+        @Valid @RequestBody SensorReadingRequest request
+    ) {
+        SensorReadingIngestResponse response = sensorService.ingestReading(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+    }
+
+    @PostMapping("/photos")
+    public ResponseEntity<ApiResponse<SensorPhotoUploadResponse>> uploadPhoto(
+        @RequestParam("drainId") Long drainId,
+        @RequestParam("imageFile") MultipartFile imageFile
+    ) {
+        SensorPhotoUploadResponse response = sensorService.uploadDevicePhoto(drainId, imageFile);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 }

@@ -13,14 +13,12 @@ import lombok.NoArgsConstructor;
 public class DrainResponse {
 
     private Long id;
-    private String name;
     private String address;
     private Double latitude;
     private Double longitude;
     private DrainStatus status;
     private Double totalDepth;
-    private Double warningWaterLevel;
-    private Double dangerWaterLevel;
-    private Double warningTrashLevel;
-    private Double dangerTrashLevel;
+    private Double waterLevelThreshold;
+    private Double trashLevelThreshold;
+    private String latestDevicePhotoUrl;
 }

@@ -64,3 +64,5 @@ src/main/resources/application-local.yaml
 src/main/resources/application-secret.properties
 src/main/resources/application-secret.yml
 src/main/resources/application-secret.yaml
+
+docs/

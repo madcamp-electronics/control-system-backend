@@ -1,5 +1,6 @@
 package com.hanium.smart_drain.alert.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -24,18 +25,35 @@ public class Alert {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "alert_id")
     private Long id;
 
+    @Column(name = "drain_id", nullable = false)
     private Long drainId;
 
-    @Enumerated(EnumType.STRING)
-    private AlertType type;
+    @Column(name = "worker_id")
+    private Long workerId;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "risk_level", nullable = false)
+    private AlertType riskLevel;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private AlertStatus status;
 
-    private String message;
+    @Column(name = "before_photo_url")
+    private String beforePhotoUrl;
+
+    @Column(name = "after_photo_url")
+    private String afterPhotoUrl;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    private LocalDateTime acknowledgedAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;
 }

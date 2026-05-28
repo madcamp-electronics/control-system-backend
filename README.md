@@ -8,7 +8,7 @@
 - 빗물받이 위치/상태/임계치 기준값 관리
 - IoT 센서 원시 데이터 수집/저장
 - 백엔드 위험도 분석(risk) 기반 알림(alert) 생성
-- 유지보수 작업(maintenance) 생성 및 작업자(worker) 연계
+- 자율 출동형 경보 접수/완료 흐름 지원
 - 대시보드 통합 조회 API 제공
 
 ## 2. 핵심 도메인 흐름
@@ -17,9 +17,9 @@
 2. 백엔드는 `SensorReading` 저장
 3. `risk` 도메인이 `Drain` 임계치와 센서값을 비교해 위험도 판단
 4. 위험 시 `alert` 도메인에서 알림 생성
-5. 필요 시 `maintenance` 도메인에서 작업 생성
-6. 작업자는 작업을 수행하고 전/후 사진 연결
-7. 사진 저장 메타데이터는 `file` 도메인, 작업-사진 관계는 `maintenance`가 관리
+5. 작업자는 `ACTIVE` 경보를 접수하여 `PROCESSING` 상태로 전환
+6. 정비 전/후 사진 URL은 `alerts`에 직접 저장
+7. 정비 완료 시 경보는 `RESOLVED`, 빗물받이 상태는 `NORMAL`로 복구
 
 ## 3. 기술 스택
 
@@ -68,27 +68,6 @@ com.hanium.smart_drain
  │  ├─ entity
  │  └─ dto
  │
- ├─ maintenance
- │  ├─ controller
- │  ├─ service
- │  ├─ repository
- │  ├─ entity
- │  └─ dto
- │
- ├─ worker
- │  ├─ controller
- │  ├─ service
- │  ├─ repository
- │  ├─ entity
- │  └─ dto
- │
- ├─ file
- │  ├─ service
- │  ├─ storage
- │  ├─ repository
- │  ├─ entity
- │  └─ dto
- │
  └─ dashboard
     ├─ controller
     ├─ service
@@ -102,7 +81,6 @@ com.hanium.smart_drain
 - Entity/DTO/Repository/Service/Controller 기본 골격 구성
 - `risk` 정책 인터페이스 및 기본 정책 클래스 추가
 - `alert` 상태 분리(`ACTIVE`, `ACKNOWLEDGED`, `RESOLVED`)
-- `maintenance`, `worker`, `file` 도메인 기본 모델 추가
 - 실제 비즈니스 로직/트랜잭션 시나리오/파일 업로드 구현은 TODO
 
 ## 6. 설정
@@ -113,24 +91,15 @@ com.hanium.smart_drain
 spring.application.name=smart-drain
 
 spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/smart_drain}
-spring.datasource.username=${DB_USERNAME:smart_drain_user}
-spring.datasource.password=${DB_PASSWORD:smart_drain_password}
+spring.datasource.username=${DB_USER}
+spring.datasource.password=${DB_PASSWORD}
 spring.datasource.driver-class-name=org.postgresql.Driver
 
-spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.properties.hibernate.format_sql=true
 spring.jpa.show-sql=true
 
 server.port=8080
-```
-
-환경변수 예시:
-
-```bash
-export DB_URL=jdbc:postgresql://localhost:5432/smart_drain
-export DB_USERNAME=smart_drain_user
-export DB_PASSWORD=smart_drain_password
-```
 
 ## 7. 실행
 
@@ -147,8 +116,6 @@ export DB_PASSWORD=smart_drain_password
 - `GET /api/sensors/ping` → `sensor api ok`
 - `GET /api/alerts/ping` → `alert api ok`
 - `GET /api/dashboard/ping` → `dashboard api ok`
-- `GET /api/maintenance/tasks/ping` → `maintenance api ok`
-- `GET /api/workers/ping` → `worker api ok`
 
 ## 9. 보안/운영 원칙
 
