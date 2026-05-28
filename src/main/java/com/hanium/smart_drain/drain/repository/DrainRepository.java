@@ -7,4 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DrainRepository extends JpaRepository<Drain, Long> {
     List<Drain> findByStatus(DrainStatus status);
+    long countByStatus(DrainStatus status);
 }
