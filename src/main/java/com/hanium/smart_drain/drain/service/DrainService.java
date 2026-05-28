@@ -5,6 +5,10 @@ import com.hanium.smart_drain.drain.dto.DrainResponse;
 import com.hanium.smart_drain.drain.entity.Drain;
 import com.hanium.smart_drain.drain.entity.DrainStatus;
 import com.hanium.smart_drain.drain.repository.DrainRepository;
+import com.hanium.smart_drain.global.exception.CustomException;
+import com.hanium.smart_drain.global.exception.ErrorCode;
+import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +33,33 @@ public class DrainService {
             .build();
 
         Drain saved = drainRepository.save(drain);
+        return toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DrainResponse> getDrains(String status) {
+        List<Drain> drains;
+        if (status == null || status.isBlank()) {
+            drains = drainRepository.findAll();
+        } else {
+            DrainStatus drainStatus = parseDrainStatus(status);
+            drains = drainRepository.findByStatus(drainStatus);
+        }
+
+        return drains.stream()
+            .map(this::toResponse)
+            .toList();
+    }
+
+    private DrainStatus parseDrainStatus(String status) {
+        try {
+            return DrainStatus.valueOf(status.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "invalid status: " + status);
+        }
+    }
+
+    private DrainResponse toResponse(Drain saved) {
         return DrainResponse.builder()
             .id(saved.getId())
             .address(saved.getAddress())

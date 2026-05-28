@@ -5,12 +5,14 @@ import com.hanium.smart_drain.drain.dto.DrainResponse;
 import com.hanium.smart_drain.drain.service.DrainService;
 import com.hanium.smart_drain.global.response.ApiResponse;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +26,13 @@ public class DrainController {
     @GetMapping("/ping")
     public ApiResponse<String> ping() {
         return ApiResponse.success("drain api ok");
+    }
+
+    @GetMapping
+    public ApiResponse<List<DrainResponse>> getDrains(
+        @RequestParam(value = "status", required = false) String status
+    ) {
+        return ApiResponse.success(drainService.getDrains(status));
     }
 
     @PostMapping
