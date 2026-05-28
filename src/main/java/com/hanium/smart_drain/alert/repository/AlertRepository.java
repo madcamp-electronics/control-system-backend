@@ -10,4 +10,5 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     boolean existsByDrainIdAndStatusIn(Long drainId, Collection<AlertStatus> statuses);
     List<Alert> findAllByOrderByCreatedAtDesc();
     List<Alert> findByStatusOrderByCreatedAtDesc(AlertStatus status);
+    List<Alert> findByDrainIdOrderByCreatedAtDesc(Long drainId);
 }

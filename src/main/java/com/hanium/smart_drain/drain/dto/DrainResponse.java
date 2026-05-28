@@ -1,6 +1,7 @@
 package com.hanium.smart_drain.drain.dto;
 
 import com.hanium.smart_drain.drain.entity.DrainStatus;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,4 +22,5 @@ public class DrainResponse {
     private Double waterLevelThreshold;
     private Double trashLevelThreshold;
     private String latestDevicePhotoUrl;
+    private List<DrainWorkPhotoResponse> workPhotos;
 }

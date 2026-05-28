@@ -1,10 +1,12 @@
 package com.hanium.smart_drain.drain.service;
 
+import com.hanium.smart_drain.alert.repository.AlertRepository;
 import com.hanium.smart_drain.drain.dto.DrainCreateRequest;
 import com.hanium.smart_drain.drain.dto.DrainListResponse;
 import com.hanium.smart_drain.drain.dto.DrainResponse;
 import com.hanium.smart_drain.drain.dto.DrainUpdateRequest;
 import com.hanium.smart_drain.drain.dto.DrainUpdateResponse;
+import com.hanium.smart_drain.drain.dto.DrainWorkPhotoResponse;
 import com.hanium.smart_drain.drain.entity.Drain;
 import com.hanium.smart_drain.drain.entity.DrainStatus;
 import com.hanium.smart_drain.drain.repository.DrainRepository;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DrainService {
 
     private final DrainRepository drainRepository;
+    private final AlertRepository alertRepository;
 
     @Transactional
     public DrainResponse createDrain(DrainCreateRequest request) {
@@ -59,7 +62,7 @@ public class DrainService {
     public DrainResponse getDrainById(Long drainId) {
         Drain drain = drainRepository.findById(drainId)
             .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
-        return toResponse(drain);
+        return toResponse(drain, true);
     }
 
     @Transactional
@@ -90,6 +93,10 @@ public class DrainService {
     }
 
     private DrainResponse toResponse(Drain saved) {
+        return toResponse(saved, false);
+    }
+
+    private DrainResponse toResponse(Drain saved, boolean includeWorkPhotos) {
         return DrainResponse.builder()
             .drainId(saved.getId())
             .address(saved.getAddress())
@@ -100,6 +107,7 @@ public class DrainService {
             .waterLevelThreshold(saved.getWaterLevelThreshold())
             .trashLevelThreshold(saved.getTrashLevelThreshold())
             .latestDevicePhotoUrl(saved.getLatestDevicePhotoUrl())
+            .workPhotos(includeWorkPhotos ? getWorkPhotos(saved.getId()) : List.of())
             .build();
     }
 
@@ -112,6 +120,21 @@ public class DrainService {
             .status(drain.getStatus())
             .totalDepth(drain.getTotalDepth())
             .build();
+    }
+
+    private List<DrainWorkPhotoResponse> getWorkPhotos(Long drainId) {
+        return alertRepository.findByDrainIdOrderByCreatedAtDesc(drainId).stream()
+            .filter(alert -> alert.getBeforePhotoUrl() != null && alert.getAfterPhotoUrl() != null)
+            .findFirst()
+            .map(alert -> List.of(DrainWorkPhotoResponse.builder()
+                .alertId(alert.getId())
+                .status(alert.getStatus())
+                .beforePhotoUrl(alert.getBeforePhotoUrl())
+                .afterPhotoUrl(alert.getAfterPhotoUrl())
+                .createdAt(alert.getCreatedAt())
+                .resolvedAt(alert.getResolvedAt())
+                .build()))
+            .orElseGet(List::of);
     }
 
     // TODO: 빗물받이 등록/조회 로직 구현 예정
