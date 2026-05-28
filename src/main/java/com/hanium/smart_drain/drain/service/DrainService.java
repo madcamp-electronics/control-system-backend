@@ -2,6 +2,7 @@ package com.hanium.smart_drain.drain.service;
 
 import com.hanium.smart_drain.alert.repository.AlertRepository;
 import com.hanium.smart_drain.drain.dto.DrainCreateRequest;
+import com.hanium.smart_drain.drain.dto.DrainCreateResponse;
 import com.hanium.smart_drain.drain.dto.DrainListResponse;
 import com.hanium.smart_drain.drain.dto.DrainResponse;
 import com.hanium.smart_drain.drain.dto.DrainUpdateRequest;
@@ -27,7 +28,7 @@ public class DrainService {
     private final AlertRepository alertRepository;
 
     @Transactional
-    public DrainResponse createDrain(DrainCreateRequest request) {
+    public DrainCreateResponse createDrain(DrainCreateRequest request) {
         Drain drain = Drain.builder()
             .address(request.getAddress())
             .latitude(request.getLatitude())
@@ -37,10 +38,15 @@ public class DrainService {
             .waterLevelThreshold(request.getWaterLevelThreshold())
             .trashLevelThreshold(request.getTrashLevelThreshold())
             .latestDevicePhotoUrl(null)
+            .registeredAt(LocalDateTime.now())
             .build();
 
         Drain saved = drainRepository.save(drain);
-        return toResponse(saved);
+        return DrainCreateResponse.builder()
+            .drainId(saved.getId())
+            .address(saved.getAddress())
+            .registeredAt(saved.getRegisteredAt())
+            .build();
     }
 
     @Transactional(readOnly = true)

@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -51,6 +52,9 @@ public class Drain {
 
     @Column(name = "latest_device_photo_url")
     private String latestDevicePhotoUrl;
+
+    @Column(name = "registered_at", nullable = false)
+    private LocalDateTime registeredAt;
 
     public void updateStatus(DrainStatus status) {
         this.status = status;

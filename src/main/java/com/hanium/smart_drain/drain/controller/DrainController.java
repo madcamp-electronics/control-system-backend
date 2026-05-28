@@ -1,6 +1,7 @@
 package com.hanium.smart_drain.drain.controller;
 
 import com.hanium.smart_drain.drain.dto.DrainCreateRequest;
+import com.hanium.smart_drain.drain.dto.DrainCreateResponse;
 import com.hanium.smart_drain.drain.dto.DrainListResponse;
 import com.hanium.smart_drain.drain.dto.DrainResponse;
 import com.hanium.smart_drain.drain.dto.DrainUpdateRequest;
@@ -56,10 +57,10 @@ public class DrainController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<DrainResponse>> createDrain(
+    public ResponseEntity<ApiResponse<DrainCreateResponse>> createDrain(
         @Valid @RequestBody DrainCreateRequest request
     ) {
-        DrainResponse response = drainService.createDrain(request);
+        DrainCreateResponse response = drainService.createDrain(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 }
