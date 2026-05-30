@@ -12,7 +12,6 @@ public class DefaultRiskPolicy implements RiskPolicy {
     @Override
     public RiskAnalysisResult evaluate(
         Drain drain,
-        Double waterLevel,
         Double trashLevel,
         Double batteryLevel,
         Integer signalStrength
@@ -34,16 +33,6 @@ public class DefaultRiskPolicy implements RiskPolicy {
                 .riskLevel(RiskLevel.SENSOR_ERROR)
                 .alertType(AlertType.SENSOR_ERROR)
                 .message("sensor health check required")
-                .needAlert(true)
-                .build();
-        }
-
-        if (isAtOrAbove(waterLevel, drain.getWaterLevelThreshold())) {
-            return RiskAnalysisResult.builder()
-                .drainId(drainId)
-                .riskLevel(RiskLevel.FLOOD_RISK)
-                .alertType(AlertType.FLOOD_RISK)
-                .message("flood risk detected")
                 .needAlert(true)
                 .build();
         }

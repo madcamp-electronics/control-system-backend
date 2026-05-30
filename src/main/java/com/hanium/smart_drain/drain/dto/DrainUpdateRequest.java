@@ -17,8 +17,5 @@ public class DrainUpdateRequest {
     private String address;
 
     @NotNull
-    private Double waterLevelThreshold;
-
-    @NotNull
     private Double trashLevelThreshold;
 }

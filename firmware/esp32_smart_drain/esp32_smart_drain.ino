@@ -48,9 +48,6 @@ static const int DAYLIGHT_OFFSET_SEC = 0;
 // IMPORTANT:
 // Avoid camera-used pins. These are example GPIOs for external ultrasonic wiring.
 // Rewire/change as needed for your board setup.
-static const int WATER_TRIG_PIN = 1;
-static const int WATER_ECHO_PIN = 2;
-
 static const int TRASH_TRIG_PIN = 41;
 static const int TRASH_ECHO_PIN = 42;
 
@@ -177,7 +174,7 @@ static bool ensureMqttConnected() {
   return false;
 }
 
-static bool publishReadings(float waterLevel, float trashLevel, float batteryLevel, int signalStrength, const String& measuredAt) {
+static bool publishReadings(float trashLevel, float batteryLevel, int signalStrength, const String& measuredAt) {
   if (!ensureMqttConnected()) {
     return false;
   }
@@ -185,7 +182,6 @@ static bool publishReadings(float waterLevel, float trashLevel, float batteryLev
   String topic = String(MQTT_TOPIC_PREFIX) + "/" + String(DRAIN_ID) + "/readings";
   String payload = "{";
   payload += "\"drainId\":" + String(DRAIN_ID) + ",";
-  payload += "\"waterLevel\":" + String(waterLevel, 2) + ",";
   payload += "\"trashLevel\":" + String(trashLevel, 2) + ",";
   payload += "\"batteryLevel\":" + String(batteryLevel, 2) + ",";
   payload += "\"signalStrength\":" + String(signalStrength) + ",";
@@ -313,8 +309,6 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
-  pinMode(WATER_TRIG_PIN, OUTPUT);
-  pinMode(WATER_ECHO_PIN, INPUT);
   pinMode(TRASH_TRIG_PIN, OUTPUT);
   pinMode(TRASH_ECHO_PIN, INPUT);
 
@@ -342,16 +336,15 @@ void loop() {
   unsigned long nowMs = millis();
 
   if (nowMs - lastReadingSentAt >= READING_INTERVAL_MS) {
-    float waterLevel = readDistanceCm(WATER_TRIG_PIN, WATER_ECHO_PIN);
     float trashLevel = readDistanceCm(TRASH_TRIG_PIN, TRASH_ECHO_PIN);
     float batteryLevel = readBatteryPercent();
     int signalStrength = WiFi.RSSI();
     String measuredAt = nowIso8601();
 
-    Serial.printf("[Readings] water=%.2f trash=%.2f battery=%.2f rssi=%d time=%s\n",
-      waterLevel, trashLevel, batteryLevel, signalStrength, measuredAt.c_str());
+    Serial.printf("[Readings] trash=%.2f battery=%.2f rssi=%d time=%s\n",
+      trashLevel, batteryLevel, signalStrength, measuredAt.c_str());
 
-    publishReadings(waterLevel, trashLevel, batteryLevel, signalStrength, measuredAt);
+    publishReadings(trashLevel, batteryLevel, signalStrength, measuredAt);
     lastReadingSentAt = nowMs;
   }
 

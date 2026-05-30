@@ -125,20 +125,18 @@ public class SensorMqttSubscriber {
                 return;
             }
 
-            Double waterLevel = getDouble(json, "waterLevel");
             Double trashLevel = getDouble(json, "trashLevel");
             Double batteryLevel = getDouble(json, "batteryLevel");
             Integer signalStrength = getInt(json, "signalStrength");
             LocalDateTime measuredAt = parseMeasuredAt(json.get("measuredAt"));
 
-            if (waterLevel == null || trashLevel == null || batteryLevel == null || signalStrength == null || measuredAt == null) {
+            if (trashLevel == null || batteryLevel == null || signalStrength == null || measuredAt == null) {
                 log.warn("MQTT reading skipped: required fields missing, topic={}, payload={}", topic, payload);
                 return;
             }
 
             SensorReadingRequest request = SensorReadingRequest.builder()
                 .drainId(drainId)
-                .waterLevel(waterLevel)
                 .trashLevel(trashLevel)
                 .batteryLevel(batteryLevel)
                 .signalStrength(signalStrength)

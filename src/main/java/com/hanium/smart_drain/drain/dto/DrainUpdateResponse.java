@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 public class DrainUpdateResponse {
 
     private Long drainId;
-    private Double waterLevelThreshold;
     private Double trashLevelThreshold;
     private LocalDateTime updatedAt;
 }

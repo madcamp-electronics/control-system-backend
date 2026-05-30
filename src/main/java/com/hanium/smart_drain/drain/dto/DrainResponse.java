@@ -19,7 +19,6 @@ public class DrainResponse {
     private Double longitude;
     private DrainStatus status;
     private Double totalDepth;
-    private Double waterLevelThreshold;
     private Double trashLevelThreshold;
     private String latestDevicePhotoUrl;
     private List<DrainWorkPhotoResponse> workPhotos;

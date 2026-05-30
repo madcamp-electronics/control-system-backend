@@ -44,9 +44,6 @@ public class Drain {
     @Column(nullable = false)
     private Double totalDepth;
 
-    @Column(name = "water_level_threshold", nullable = false)
-    private Double waterLevelThreshold;
-
     @Column(name = "trash_level_threshold", nullable = false)
     private Double trashLevelThreshold;
 
@@ -64,9 +61,8 @@ public class Drain {
         this.latestDevicePhotoUrl = latestDevicePhotoUrl;
     }
 
-    public void updateInfo(String address, Double waterLevelThreshold, Double trashLevelThreshold) {
+    public void updateInfo(String address, Double trashLevelThreshold) {
         this.address = address;
-        this.waterLevelThreshold = waterLevelThreshold;
         this.trashLevelThreshold = trashLevelThreshold;
     }
 }

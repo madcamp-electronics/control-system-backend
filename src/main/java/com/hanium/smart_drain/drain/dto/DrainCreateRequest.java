@@ -22,7 +22,5 @@ public class DrainCreateRequest {
     @NotNull
     private Double totalDepth;
     @NotNull
-    private Double waterLevelThreshold;
-    @NotNull
     private Double trashLevelThreshold;
 }

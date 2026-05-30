@@ -50,7 +50,6 @@ public class SensorService {
         LocalDateTime receivedAt = LocalDateTime.now();
         SensorReading sensorReading = SensorReading.builder()
             .drainId(request.getDrainId())
-            .waterLevel(request.getWaterLevel())
             .trashLevel(request.getTrashLevel())
             .batteryLevel(request.getBatteryLevel())
             .signalStrength(request.getSignalStrength())
@@ -61,7 +60,6 @@ public class SensorService {
 
         RiskAnalysisResult riskResult = riskAnalysisService.analyze(
             request.getDrainId(),
-            request.getWaterLevel(),
             request.getTrashLevel(),
             request.getBatteryLevel(),
             request.getSignalStrength()
@@ -130,7 +128,6 @@ public class SensorService {
             .findByDrainIdAndMeasuredAtBetweenOrderByMeasuredAtDesc(drainId, startTime, endTime)
             .stream()
             .map(reading -> SensorHistoryResponse.builder()
-                .waterLevel(reading.getWaterLevel())
                 .trashLevel(reading.getTrashLevel())
                 .batteryLevel(reading.getBatteryLevel())
                 .measuredAt(reading.getMeasuredAt())

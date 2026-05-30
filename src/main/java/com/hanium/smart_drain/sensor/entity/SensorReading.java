@@ -31,8 +31,6 @@ public class SensorReading {
     private Long drainId;
 
     @Column(nullable = false)
-    private Double waterLevel;
-    @Column(nullable = false)
     private Double trashLevel;
     @Column(nullable = false)
     private Double batteryLevel;

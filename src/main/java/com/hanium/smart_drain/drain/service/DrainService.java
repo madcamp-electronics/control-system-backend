@@ -35,7 +35,6 @@ public class DrainService {
             .longitude(request.getLongitude())
             .status(DrainStatus.NORMAL)
             .totalDepth(request.getTotalDepth())
-            .waterLevelThreshold(request.getWaterLevelThreshold())
             .trashLevelThreshold(request.getTrashLevelThreshold())
             .latestDevicePhotoUrl(null)
             .registeredAt(LocalDateTime.now())
@@ -78,13 +77,11 @@ public class DrainService {
 
         drain.updateInfo(
             request.getAddress(),
-            request.getWaterLevelThreshold(),
             request.getTrashLevelThreshold()
         );
 
         return DrainUpdateResponse.builder()
             .drainId(drain.getId())
-            .waterLevelThreshold(drain.getWaterLevelThreshold())
             .trashLevelThreshold(drain.getTrashLevelThreshold())
             .updatedAt(LocalDateTime.now())
             .build();
@@ -110,7 +107,6 @@ public class DrainService {
             .longitude(saved.getLongitude())
             .status(saved.getStatus())
             .totalDepth(saved.getTotalDepth())
-            .waterLevelThreshold(saved.getWaterLevelThreshold())
             .trashLevelThreshold(saved.getTrashLevelThreshold())
             .latestDevicePhotoUrl(saved.getLatestDevicePhotoUrl())
             .workPhotos(includeWorkPhotos ? getWorkPhotos(saved.getId()) : List.of())

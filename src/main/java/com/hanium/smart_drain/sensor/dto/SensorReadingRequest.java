@@ -16,8 +16,6 @@ public class SensorReadingRequest {
     @NotNull
     private Long drainId;
     @NotNull
-    private Double waterLevel;
-    @NotNull
     private Double trashLevel;
     @NotNull
     private Double batteryLevel;

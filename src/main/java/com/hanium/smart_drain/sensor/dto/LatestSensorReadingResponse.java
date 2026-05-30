@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 public class LatestSensorReadingResponse {
 
     private Long drainId;
-    private Double waterLevel;
     private Double trashLevel;
     private Double batteryLevel;
     private Integer signalStrength;

@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SensorHistoryResponse {
 
-    private Double waterLevel;
     private Double trashLevel;
     private Double batteryLevel;
     private LocalDateTime measuredAt;
