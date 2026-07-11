@@ -46,11 +46,12 @@ public class SensorService {
     public SensorReadingIngestResponse ingestReading(SensorReadingRequest request) {
         Drain drain = drainRepository.findById(request.getDrainId())
             .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
+        Double trashLevel = calculateTrashLevelFromDistance(drain, request.getTrashLevel());
 
         LocalDateTime receivedAt = LocalDateTime.now();
         SensorReading sensorReading = SensorReading.builder()
             .drainId(request.getDrainId())
-            .trashLevel(request.getTrashLevel())
+            .trashLevel(trashLevel)
             .batteryLevel(request.getBatteryLevel())
             .signalStrength(request.getSignalStrength())
             .measuredAt(request.getMeasuredAt())
@@ -60,7 +61,7 @@ public class SensorService {
 
         RiskAnalysisResult riskResult = riskAnalysisService.analyze(
             request.getDrainId(),
-            request.getTrashLevel(),
+            trashLevel,
             request.getBatteryLevel(),
             request.getSignalStrength()
         );
@@ -151,6 +152,29 @@ public class SensorService {
         if (drain.getStatus() != targetStatus) {
             drain.updateStatus(targetStatus);
         }
+    }
+
+    private Double calculateTrashLevelFromDistance(Drain drain, Double distanceCm) {
+        if (distanceCm == null) {
+            return null;
+        }
+        if (distanceCm < 0) {
+            return distanceCm;
+        }
+
+        Double totalDepth = drain.getTotalDepth();
+        if (totalDepth == null || totalDepth <= 0) {
+            return distanceCm;
+        }
+
+        double trashLevel = totalDepth - distanceCm;
+        if (trashLevel < 0) {
+            return 0.0;
+        }
+        if (trashLevel > totalDepth) {
+            return totalDepth;
+        }
+        return trashLevel;
     }
 
     private String buildStoredFileName(Long drainId, String originalFilename) {
