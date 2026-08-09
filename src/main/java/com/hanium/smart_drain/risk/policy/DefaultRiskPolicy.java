@@ -44,7 +44,7 @@ public class DefaultRiskPolicy implements RiskPolicy {
                 .drainId(drainId)
                 .riskLevel(RiskLevel.NEED_INSPECTION)
                 .alertType(AlertType.NEED_INSPECTION)
-                .message("trash level exceeds threshold")
+                .message("water level exceeds threshold")
                 .needAlert(true)
                 .build();
         }

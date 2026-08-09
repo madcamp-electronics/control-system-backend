@@ -174,7 +174,7 @@ static bool ensureMqttConnected() {
   return false;
 }
 
-static bool publishReadings(float trashLevel, float batteryLevel, int signalStrength, const String& measuredAt) {
+static bool publishReadings(float distanceCm, float batteryLevel, int signalStrength, const String& measuredAt) {
   if (!ensureMqttConnected()) {
     return false;
   }
@@ -182,7 +182,9 @@ static bool publishReadings(float trashLevel, float batteryLevel, int signalStre
   String topic = String(MQTT_TOPIC_PREFIX) + "/" + String(DRAIN_ID) + "/readings";
   String payload = "{";
   payload += "\"drainId\":" + String(DRAIN_ID) + ",";
-  payload += "\"trashLevel\":" + String(trashLevel, 2) + ",";
+  // Keep the legacy JSON key for backend compatibility. The value is the
+  // ultrasonic distance; the backend calculates water level as depth - distance.
+  payload += "\"trashLevel\":" + String(distanceCm, 2) + ",";
   payload += "\"batteryLevel\":" + String(batteryLevel, 2) + ",";
   payload += "\"signalStrength\":" + String(signalStrength) + ",";
   payload += "\"measuredAt\":\"" + measuredAt + "\"";
@@ -336,15 +338,15 @@ void loop() {
   unsigned long nowMs = millis();
 
   if (nowMs - lastReadingSentAt >= READING_INTERVAL_MS) {
-    float trashLevel = readDistanceCm(TRASH_TRIG_PIN, TRASH_ECHO_PIN);
+    float distanceCm = readDistanceCm(TRASH_TRIG_PIN, TRASH_ECHO_PIN);
     float batteryLevel = readBatteryPercent();
     int signalStrength = WiFi.RSSI();
     String measuredAt = nowIso8601();
 
-    Serial.printf("[Readings] trash=%.2f battery=%.2f rssi=%d time=%s\n",
-      trashLevel, batteryLevel, signalStrength, measuredAt.c_str());
+    Serial.printf("[Readings] distanceCm=%.2f battery=%.2f rssi=%d time=%s\n",
+      distanceCm, batteryLevel, signalStrength, measuredAt.c_str());
 
-    publishReadings(trashLevel, batteryLevel, signalStrength, measuredAt);
+    publishReadings(distanceCm, batteryLevel, signalStrength, measuredAt);
     lastReadingSentAt = nowMs;
   }
 

@@ -121,6 +121,7 @@ public class DrainService {
             .longitude(drain.getLongitude())
             .status(drain.getStatus())
             .totalDepth(drain.getTotalDepth())
+            .latestDevicePhotoUrl(drain.getLatestDevicePhotoUrl())
             .build();
     }
 

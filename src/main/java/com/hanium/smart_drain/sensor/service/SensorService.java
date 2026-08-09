@@ -10,6 +10,7 @@ import com.hanium.smart_drain.risk.dto.RiskAnalysisResult;
 import com.hanium.smart_drain.risk.dto.RiskLevel;
 import com.hanium.smart_drain.risk.service.RiskAnalysisService;
 import com.hanium.smart_drain.sensor.dto.SensorHistoryResponse;
+import com.hanium.smart_drain.sensor.dto.LatestSensorReadingResponse;
 import com.hanium.smart_drain.sensor.dto.SensorReadingIngestResponse;
 import com.hanium.smart_drain.sensor.dto.SensorPhotoUploadResponse;
 import com.hanium.smart_drain.sensor.dto.SensorReadingRequest;
@@ -46,7 +47,9 @@ public class SensorService {
     public SensorReadingIngestResponse ingestReading(SensorReadingRequest request) {
         Drain drain = drainRepository.findById(request.getDrainId())
             .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
-        Double trashLevel = calculateTrashLevelFromDistance(drain, request.getTrashLevel());
+        // 기존 컬럼명은 유지하지만 저장값의 의미는 계산된 수위입니다.
+        // waterLevel = drain.totalDepth - ultrasonicDistance
+        Double trashLevel = calculateWaterLevelFromDistance(drain, request.getTrashLevel());
 
         LocalDateTime receivedAt = LocalDateTime.now();
         SensorReading sensorReading = SensorReading.builder()
@@ -129,6 +132,7 @@ public class SensorService {
             .findByDrainIdAndMeasuredAtBetweenOrderByMeasuredAtDesc(drainId, startTime, endTime)
             .stream()
             .map(reading -> SensorHistoryResponse.builder()
+                .waterLevel(reading.getTrashLevel())
                 .trashLevel(reading.getTrashLevel())
                 .batteryLevel(reading.getBatteryLevel())
                 .measuredAt(reading.getMeasuredAt())
@@ -136,9 +140,24 @@ public class SensorService {
             .toList();
     }
 
-    // TODO: 센서 데이터 수신/저장 로직 구현 예정
-    // TODO: 저장 후 RiskAnalysisService를 통해 위험도 판단 예정
-    // TODO: 최신 측정값 조회 로직 구현 예정
+    @Transactional(readOnly = true)
+    public LatestSensorReadingResponse getLatestReading(Long drainId) {
+        drainRepository.findById(drainId)
+            .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
+
+        SensorReading reading = sensorReadingRepository
+            .findFirstByDrainIdOrderByMeasuredAtDescReadingIdDesc(drainId)
+            .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "sensor reading not found"));
+
+        return toLatestResponse(reading);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LatestSensorReadingResponse> getLatestReadings() {
+        return sensorReadingRepository.findLatestReadings().stream()
+            .map(this::toLatestResponse)
+            .toList();
+    }
 
     private void updateDrainStatusByRiskLevel(Drain drain, RiskLevel riskLevel) {
         if (riskLevel == null) {
@@ -154,7 +173,19 @@ public class SensorService {
         }
     }
 
-    private Double calculateTrashLevelFromDistance(Drain drain, Double distanceCm) {
+    private LatestSensorReadingResponse toLatestResponse(SensorReading reading) {
+        return LatestSensorReadingResponse.builder()
+            .drainId(reading.getDrainId())
+            .waterLevel(reading.getTrashLevel())
+            .trashLevel(reading.getTrashLevel())
+            .batteryLevel(reading.getBatteryLevel())
+            .signalStrength(reading.getSignalStrength())
+            .measuredAt(reading.getMeasuredAt())
+            .receivedAt(reading.getReceivedAt())
+            .build();
+    }
+
+    private Double calculateWaterLevelFromDistance(Drain drain, Double distanceCm) {
         if (distanceCm == null) {
             return null;
         }
@@ -167,14 +198,14 @@ public class SensorService {
             return distanceCm;
         }
 
-        double trashLevel = totalDepth - distanceCm;
-        if (trashLevel < 0) {
+        double waterLevel = totalDepth - distanceCm;
+        if (waterLevel < 0) {
             return 0.0;
         }
-        if (trashLevel > totalDepth) {
+        if (waterLevel > totalDepth) {
             return totalDepth;
         }
-        return trashLevel;
+        return waterLevel;
     }
 
     private String buildStoredFileName(Long drainId, String originalFilename) {

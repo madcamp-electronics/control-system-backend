@@ -2,6 +2,7 @@ package com.hanium.smart_drain.sensor.controller;
 
 import com.hanium.smart_drain.global.response.ApiResponse;
 import com.hanium.smart_drain.sensor.dto.SensorHistoryResponse;
+import com.hanium.smart_drain.sensor.dto.LatestSensorReadingResponse;
 import com.hanium.smart_drain.sensor.dto.SensorPhotoUploadResponse;
 import com.hanium.smart_drain.sensor.service.SensorService;
 import java.time.LocalDateTime;
@@ -24,6 +25,18 @@ import org.springframework.web.multipart.MultipartFile;
 public class SensorController {
 
     private final SensorService sensorService;
+
+    @GetMapping("/latest")
+    public ApiResponse<List<LatestSensorReadingResponse>> getLatestReadings() {
+        return ApiResponse.success(sensorService.getLatestReadings());
+    }
+
+    @GetMapping("/drains/{drainId}/latest")
+    public ApiResponse<LatestSensorReadingResponse> getLatestReading(
+        @PathVariable("drainId") Long drainId
+    ) {
+        return ApiResponse.success(sensorService.getLatestReading(drainId));
+    }
 
     @PostMapping("/photos")
     public ResponseEntity<ApiResponse<SensorPhotoUploadResponse>> uploadPhoto(
