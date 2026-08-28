@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class SensorHistoryResponse {
 
     private Double trashLevel;
+    private Double coverDistance;
     private Double batteryLevel;
     private LocalDateTime measuredAt;
 }

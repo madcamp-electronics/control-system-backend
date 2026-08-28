@@ -52,6 +52,7 @@ public class SensorService {
         SensorReading sensorReading = SensorReading.builder()
             .drainId(request.getDrainId())
             .trashLevel(trashLevel)
+            .coverDistance(request.getCoverDistance())
             .batteryLevel(request.getBatteryLevel())
             .signalStrength(request.getSignalStrength())
             .measuredAt(request.getMeasuredAt())
@@ -62,6 +63,7 @@ public class SensorService {
         RiskAnalysisResult riskResult = riskAnalysisService.analyze(
             request.getDrainId(),
             trashLevel,
+            request.getCoverDistance(),
             request.getBatteryLevel(),
             request.getSignalStrength()
         );
@@ -130,6 +132,7 @@ public class SensorService {
             .stream()
             .map(reading -> SensorHistoryResponse.builder()
                 .trashLevel(reading.getTrashLevel())
+                .coverDistance(reading.getCoverDistance())
                 .batteryLevel(reading.getBatteryLevel())
                 .measuredAt(reading.getMeasuredAt())
                 .build())

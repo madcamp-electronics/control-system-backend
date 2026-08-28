@@ -126,6 +126,7 @@ public class SensorMqttSubscriber {
             }
 
             Double trashLevel = getDouble(json, "trashLevel");
+            Double coverDistance = getDouble(json, "coverDistance");
             Double batteryLevel = getDouble(json, "batteryLevel");
             Integer signalStrength = getInt(json, "signalStrength");
             LocalDateTime measuredAt = parseMeasuredAt(json.get("measuredAt"));
@@ -138,6 +139,7 @@ public class SensorMqttSubscriber {
             SensorReadingRequest request = SensorReadingRequest.builder()
                 .drainId(drainId)
                 .trashLevel(trashLevel)
+                .coverDistance(coverDistance)
                 .batteryLevel(batteryLevel)
                 .signalStrength(signalStrength)
                 .measuredAt(measuredAt)

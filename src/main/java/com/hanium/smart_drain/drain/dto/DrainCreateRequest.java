@@ -23,4 +23,5 @@ public class DrainCreateRequest {
     private Double totalDepth;
     @NotNull
     private Double trashLevelThreshold;
+    private Double coverDistanceThreshold;
 }

@@ -14,6 +14,7 @@ public class LatestSensorReadingResponse {
 
     private Long drainId;
     private Double trashLevel;
+    private Double coverDistance;
     private Double batteryLevel;
     private Integer signalStrength;
     private LocalDateTime measuredAt;
