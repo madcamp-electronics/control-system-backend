@@ -3,13 +3,15 @@ package com.hanium.smart_drain.alert.service;
 import com.hanium.smart_drain.alert.dto.AlertListResponse;
 import com.hanium.smart_drain.alert.dto.AlertCompleteResponse;
 import com.hanium.smart_drain.alert.dto.AlertPhotoType;
-import com.hanium.smart_drain.alert.dto.AlertPhotoUploadResponse;
 import com.hanium.smart_drain.alert.dto.AlertStatusUpdateRequest;
 import com.hanium.smart_drain.alert.dto.AlertStatusUpdateResponse;
 import com.hanium.smart_drain.alert.entity.Alert;
 import com.hanium.smart_drain.alert.entity.AlertStatus;
 import com.hanium.smart_drain.alert.entity.AlertType;
 import com.hanium.smart_drain.alert.repository.AlertRepository;
+import com.hanium.smart_drain.auth.entity.User;
+import com.hanium.smart_drain.auth.entity.UserRole;
+import com.hanium.smart_drain.auth.repository.UserRepository;
 import com.hanium.smart_drain.drain.entity.Drain;
 import com.hanium.smart_drain.drain.entity.DrainStatus;
 import com.hanium.smart_drain.drain.repository.DrainRepository;
@@ -37,6 +39,7 @@ public class AlertService {
 
     private final AlertRepository alertRepository;
     private final DrainRepository drainRepository;
+    private final UserRepository userRepository;
     @Value("${app.storage.alert-dir:storage/alerts}")
     private String alertStorageDir;
     @Value("${app.storage.alert-url-prefix:/storage/alerts}")
@@ -78,28 +81,42 @@ public class AlertService {
                 return AlertListResponse.builder()
                     .alertId(alert.getId())
                     .drainId(alert.getDrainId())
+                    .workerId(alert.getWorkerId())
                     .address(drain != null ? drain.getAddress() : null)
                     .latitude(drain != null ? drain.getLatitude() : null)
                     .longitude(drain != null ? drain.getLongitude() : null)
                     .riskLevel(alert.getRiskLevel())
                     .status(alert.getStatus())
+                    .beforePhotoUrl(alert.getBeforePhotoUrl())
+                    .afterPhotoUrl(alert.getAfterPhotoUrl())
                     .createdAt(alert.getCreatedAt())
+                    .updatedAt(alert.getUpdatedAt())
+                    .resolvedAt(alert.getResolvedAt())
                     .build();
             })
             .toList();
     }
 
     @Transactional
-    public AlertStatusUpdateResponse updateAlertStatus(Long alertId, AlertStatusUpdateRequest request) {
+    public AlertStatusUpdateResponse updateAlertStatus(
+        Long alertId,
+        AlertStatusUpdateRequest request,
+        Long authenticatedWorkerId
+    ) {
         if (request.getStatus() != AlertStatus.PROCESSING) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "status must be PROCESSING");
         }
 
+        validateWorker(authenticatedWorkerId);
+
         Alert alert = alertRepository.findById(alertId)
             .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "alert not found"));
+        if (alert.getStatus() != AlertStatus.ACTIVE) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "only active alerts can be accepted");
+        }
 
         LocalDateTime now = LocalDateTime.now();
-        alert.updateStatusAndWorker(request.getStatus(), request.getWorkerId(), now);
+        alert.updateStatusAndWorker(request.getStatus(), authenticatedWorkerId, now);
 
         return AlertStatusUpdateResponse.builder()
             .alertId(alert.getId())
@@ -110,52 +127,72 @@ public class AlertService {
     }
 
     @Transactional
-    public AlertPhotoUploadResponse uploadAlertPhoto(Long alertId, MultipartFile imageFile, AlertPhotoType photoType) {
-        if (imageFile == null || imageFile.isEmpty()) {
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "imageFile is required");
-        }
-        if (photoType == null) {
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "photoType is required");
-        }
+    public AlertStatusUpdateResponse assignAlert(Long alertId, Long workerId) {
+        validateWorker(workerId);
 
         Alert alert = alertRepository.findById(alertId)
             .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "alert not found"));
-
-        String storedFileName = buildStoredFileName(alertId, photoType, imageFile.getOriginalFilename());
-        Path storagePath = Path.of(alertStorageDir);
-        Path targetPath = storagePath.resolve(storedFileName);
-        try {
-            Files.createDirectories(storagePath);
-            Files.copy(imageFile.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "failed to store image file");
+        if (alert.getStatus() != AlertStatus.ACTIVE) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "only active alerts can be assigned");
         }
 
-        String fileUrl = alertUrlPrefix + "/" + storedFileName;
         LocalDateTime now = LocalDateTime.now();
-        if (photoType == AlertPhotoType.BEFORE) {
-            alert.updateBeforePhoto(fileUrl, now);
-        } else {
-            alert.updateAfterPhoto(fileUrl, now);
-        }
+        alert.updateStatusAndWorker(AlertStatus.PROCESSING, workerId, now);
 
-        return AlertPhotoUploadResponse.builder()
-            .photoId(alert.getId())
+        return AlertStatusUpdateResponse.builder()
             .alertId(alert.getId())
-            .fileUrl(fileUrl)
-            .photoType(photoType)
+            .status(alert.getStatus())
+            .workerId(alert.getWorkerId())
+            .updatedAt(alert.getUpdatedAt())
             .build();
     }
 
+    private void validateWorker(Long workerId) {
+        User worker = userRepository.findById(workerId)
+            .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "worker not found"));
+        if (worker.getRole() != UserRole.ROLE_WORKER) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "selected user is not a worker");
+        }
+    }
+
     @Transactional
-    public AlertCompleteResponse completeAlert(Long alertId) {
+    public AlertCompleteResponse completeAlertWithPhotos(
+        Long alertId,
+        MultipartFile beforeImageFile,
+        MultipartFile afterImageFile,
+        Long authenticatedWorkerId
+    ) {
+        validateImageFile(beforeImageFile, "beforeImageFile");
+        validateImageFile(afterImageFile, "afterImageFile");
+
         Alert alert = alertRepository.findById(alertId)
             .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "alert not found"));
+        validateAssignedWorker(alert, authenticatedWorkerId);
 
         Drain drain = drainRepository.findById(alert.getDrainId())
             .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
 
+        Path storagePath = Path.of(alertStorageDir);
+        Path beforeTarget = storagePath.resolve(
+            buildStoredFileName(alertId, AlertPhotoType.BEFORE, beforeImageFile.getOriginalFilename())
+        );
+        Path afterTarget = storagePath.resolve(
+            buildStoredFileName(alertId, AlertPhotoType.AFTER, afterImageFile.getOriginalFilename())
+        );
+
+        try {
+            Files.createDirectories(storagePath);
+            Files.copy(beforeImageFile.getInputStream(), beforeTarget, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(afterImageFile.getInputStream(), afterTarget, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException exception) {
+            deleteQuietly(beforeTarget);
+            deleteQuietly(afterTarget);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "failed to store work photos");
+        }
+
         LocalDateTime now = LocalDateTime.now();
+        alert.updateBeforePhoto(alertUrlPrefix + "/" + beforeTarget.getFileName(), now);
+        alert.updateAfterPhoto(alertUrlPrefix + "/" + afterTarget.getFileName(), now);
         alert.complete(now);
         drain.updateStatus(DrainStatus.NORMAL);
 
@@ -165,6 +202,29 @@ public class AlertService {
             .status(alert.getStatus())
             .resolvedAt(alert.getResolvedAt())
             .build();
+    }
+
+    private void validateImageFile(MultipartFile imageFile, String fieldName) {
+        if (imageFile == null || imageFile.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, fieldName + " is required");
+        }
+    }
+
+    private void deleteQuietly(Path path) {
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException ignored) {
+            // Best-effort cleanup after a failed multipart write.
+        }
+    }
+
+    private void validateAssignedWorker(Alert alert, Long authenticatedWorkerId) {
+        if (alert.getStatus() != AlertStatus.PROCESSING) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "alert must be processing");
+        }
+        if (!authenticatedWorkerId.equals(alert.getWorkerId())) {
+            throw new CustomException(ErrorCode.FORBIDDEN, "alert is assigned to another worker");
+        }
     }
 
     private AlertStatus parseAlertStatus(String status) {

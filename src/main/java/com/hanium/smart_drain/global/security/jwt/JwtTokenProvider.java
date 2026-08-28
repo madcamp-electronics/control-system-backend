@@ -1,14 +1,20 @@
 package com.hanium.smart_drain.global.security.jwt;
 
 import com.hanium.smart_drain.auth.entity.User;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -53,6 +59,30 @@ public class JwtTokenProvider {
             .expiration(expiration)
             .signWith(signingKey)
             .compact();
+    }
+
+    public Authentication getAuthentication(String token) {
+        Claims claims;
+        try {
+            claims = Jwts.parser()
+                .verifyWith(signingKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        } catch (JwtException | IllegalArgumentException exception) {
+            return null;
+        }
+
+        String role = claims.get("role", String.class);
+        if (role == null || !(role.equals("ROLE_ADMIN") || role.equals("ROLE_WORKER"))) {
+            return null;
+        }
+
+        return new UsernamePasswordAuthenticationToken(
+            claims.getSubject(),
+            null,
+            List.of(new SimpleGrantedAuthority(role))
+        );
     }
 
     public LocalDateTime calculateRefreshTokenExpiresAt() {

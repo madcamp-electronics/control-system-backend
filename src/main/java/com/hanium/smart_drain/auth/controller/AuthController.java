@@ -51,6 +51,7 @@ public class AuthController {
             .build();
 
         LoginResponse response = LoginResponse.builder()
+            .userId(loginResult.getUserId())
             .accessToken(loginResult.getAccessToken())
             .username(loginResult.getUsername())
             .name(loginResult.getName())
