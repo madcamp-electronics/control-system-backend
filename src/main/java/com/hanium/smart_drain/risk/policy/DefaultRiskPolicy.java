@@ -15,6 +15,7 @@ public class DefaultRiskPolicy implements RiskPolicy {
     public RiskAnalysisResult evaluate(
         Drain drain,
         Double trashLevel,
+        Double coverDistance,
         Double batteryLevel,
         Integer signalStrength
     ) {
@@ -29,12 +30,25 @@ public class DefaultRiskPolicy implements RiskPolicy {
         Long drainId = drain.getId();
 
         // TODO: 기준값 상세 계산 및 정책 고도화
-        if (isInvalidTrashLevel(trashLevel) || isLowBattery(batteryLevel) || isInvalidSignal(signalStrength)) {
+        if (isInvalidTrashLevel(trashLevel)
+            || isInvalidCoverDistance(coverDistance)
+            || isLowBattery(batteryLevel)
+            || isInvalidSignal(signalStrength)) {
             return RiskAnalysisResult.builder()
                 .drainId(drainId)
                 .riskLevel(RiskLevel.SENSOR_ERROR)
                 .alertType(AlertType.SENSOR_ERROR)
                 .message("sensor health check required")
+                .needAlert(true)
+                .build();
+        }
+
+        if (isCoverBlocked(coverDistance, drain.getCoverDistanceThreshold())) {
+            return RiskAnalysisResult.builder()
+                .drainId(drainId)
+                .riskLevel(RiskLevel.NEED_INSPECTION)
+                .alertType(AlertType.NEED_INSPECTION)
+                .message("drain cover blocked")
                 .needAlert(true)
                 .build();
         }
@@ -61,8 +75,18 @@ public class DefaultRiskPolicy implements RiskPolicy {
         return value != null && threshold != null && value >= threshold;
     }
 
+    private boolean isCoverBlocked(Double coverDistance, Double coverDistanceThreshold) {
+        return coverDistance != null
+            && coverDistanceThreshold != null
+            && coverDistance <= coverDistanceThreshold;
+    }
+
     private boolean isInvalidTrashLevel(Double trashLevel) {
         return trashLevel != null && trashLevel < 0;
+    }
+
+    private boolean isInvalidCoverDistance(Double coverDistance) {
+        return coverDistance != null && coverDistance < 0;
     }
 
     private boolean isLowBattery(Double batteryLevel) {

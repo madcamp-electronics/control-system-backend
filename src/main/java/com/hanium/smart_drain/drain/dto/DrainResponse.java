@@ -20,6 +20,7 @@ public class DrainResponse {
     private DrainStatus status;
     private Double totalDepth;
     private Double trashLevelThreshold;
+    private Double coverDistanceThreshold;
     private String latestDevicePhotoUrl;
     private List<DrainWorkPhotoResponse> workPhotos;
 }

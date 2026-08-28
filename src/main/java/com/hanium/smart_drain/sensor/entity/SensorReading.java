@@ -32,6 +32,8 @@ public class SensorReading {
 
     @Column(nullable = false)
     private Double trashLevel;
+    @Column(name = "cover_distance")
+    private Double coverDistance;
     @Column(nullable = false)
     private Double batteryLevel;
     @Column(nullable = false)

@@ -20,6 +20,7 @@ public class LatestSensorReadingResponse {
     private Double waterLevel;
     // 기존 API 소비자를 위한 호환 필드
     private Double trashLevel;
+    private Double coverDistance;
     private Double batteryLevel;
     private Integer signalStrength;
     private LocalDateTime measuredAt;

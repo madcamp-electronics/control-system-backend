@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS drains (
     status VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
     total_depth DOUBLE PRECISION NOT NULL,
     trash_level_threshold DOUBLE PRECISION NOT NULL,
+    cover_distance_threshold DOUBLE PRECISION NOT NULL DEFAULT 30.0,
     latest_device_photo_url VARCHAR(512) NULL,
     registered_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -38,6 +39,9 @@ CREATE TABLE IF NOT EXISTS drains (
 -- 기존 DB에 안전하게 컬럼 반영
 ALTER TABLE IF EXISTS drains
 ADD COLUMN IF NOT EXISTS latest_device_photo_url VARCHAR(512) NULL;
+
+ALTER TABLE IF EXISTS drains
+ADD COLUMN IF NOT EXISTS cover_distance_threshold DOUBLE PRECISION NOT NULL DEFAULT 30.0;
 
 -- 구버전 스키마 컬럼 정리 (존재할 때만 삭제)
 ALTER TABLE IF EXISTS drains DROP COLUMN IF EXISTS name;
@@ -54,6 +58,7 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
     reading_id BIGSERIAL PRIMARY KEY,
     drain_id BIGINT NOT NULL,
     trash_level DOUBLE PRECISION NOT NULL,
+    cover_distance DOUBLE PRECISION NULL,
     battery_level DOUBLE PRECISION NOT NULL,
     signal_strength INTEGER NOT NULL,
     measured_at TIMESTAMP NOT NULL,
@@ -64,6 +69,9 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
 );
 
 ALTER TABLE IF EXISTS sensor_readings DROP COLUMN IF EXISTS water_level;
+
+ALTER TABLE IF EXISTS sensor_readings
+ADD COLUMN IF NOT EXISTS cover_distance DOUBLE PRECISION NULL;
 
 
 -- 4. 위험 알림 및 정비 이력 통합 테이블 (사진 업로드 포함)

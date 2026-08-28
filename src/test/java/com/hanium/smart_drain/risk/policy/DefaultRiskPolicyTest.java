@@ -16,7 +16,7 @@ class DefaultRiskPolicyTest {
 
     @Test
     void normalWifiRssiDoesNotCreateSensorError() {
-        RiskAnalysisResult result = policy.evaluate(testDrain(), 20.0, 80.0, -55);
+        RiskAnalysisResult result = policy.evaluate(testDrain(), 20.0, 50.0, 80.0, -55);
 
         assertThat(result.getRiskLevel()).isEqualTo(RiskLevel.NORMAL);
         assertThat(result.isNeedAlert()).isFalse();
@@ -24,7 +24,7 @@ class DefaultRiskPolicyTest {
 
     @Test
     void veryWeakWifiRssiCreatesSensorError() {
-        RiskAnalysisResult result = policy.evaluate(testDrain(), 20.0, 80.0, -91);
+        RiskAnalysisResult result = policy.evaluate(testDrain(), 20.0, 50.0, 80.0, -91);
 
         assertThat(result.getRiskLevel()).isEqualTo(RiskLevel.SENSOR_ERROR);
         assertThat(result.getAlertType()).isEqualTo(AlertType.SENSOR_ERROR);
@@ -33,7 +33,25 @@ class DefaultRiskPolicyTest {
 
     @Test
     void negativeTrashLevelCreatesSensorError() {
-        RiskAnalysisResult result = policy.evaluate(testDrain(), -1.0, 80.0, -55);
+        RiskAnalysisResult result = policy.evaluate(testDrain(), -1.0, 50.0, 80.0, -55);
+
+        assertThat(result.getRiskLevel()).isEqualTo(RiskLevel.SENSOR_ERROR);
+        assertThat(result.getAlertType()).isEqualTo(AlertType.SENSOR_ERROR);
+        assertThat(result.isNeedAlert()).isTrue();
+    }
+
+    @Test
+    void closeCoverDistanceCreatesNeedInspection() {
+        RiskAnalysisResult result = policy.evaluate(testDrain(), 20.0, 25.0, 80.0, -55);
+
+        assertThat(result.getRiskLevel()).isEqualTo(RiskLevel.NEED_INSPECTION);
+        assertThat(result.getAlertType()).isEqualTo(AlertType.NEED_INSPECTION);
+        assertThat(result.isNeedAlert()).isTrue();
+    }
+
+    @Test
+    void negativeCoverDistanceCreatesSensorError() {
+        RiskAnalysisResult result = policy.evaluate(testDrain(), 20.0, -1.0, 80.0, -55);
 
         assertThat(result.getRiskLevel()).isEqualTo(RiskLevel.SENSOR_ERROR);
         assertThat(result.getAlertType()).isEqualTo(AlertType.SENSOR_ERROR);
@@ -49,6 +67,7 @@ class DefaultRiskPolicyTest {
             .status(DrainStatus.NORMAL)
             .totalDepth(100.0)
             .trashLevelThreshold(80.0)
+            .coverDistanceThreshold(30.0)
             .registeredAt(LocalDateTime.now())
             .build();
     }

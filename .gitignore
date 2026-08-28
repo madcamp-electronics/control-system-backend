@@ -67,3 +67,5 @@ src/main/resources/application-secret.yaml
 
 docs/
 storage/
+
+mosquitto/

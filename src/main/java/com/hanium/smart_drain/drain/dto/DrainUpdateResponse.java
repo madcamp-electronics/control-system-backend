@@ -14,5 +14,6 @@ public class DrainUpdateResponse {
 
     private Long drainId;
     private Double trashLevelThreshold;
+    private Double coverDistanceThreshold;
     private LocalDateTime updatedAt;
 }

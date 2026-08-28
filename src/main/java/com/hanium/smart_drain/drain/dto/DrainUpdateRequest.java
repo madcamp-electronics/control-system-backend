@@ -18,4 +18,6 @@ public class DrainUpdateRequest {
 
     @NotNull
     private Double trashLevelThreshold;
+
+    private Double coverDistanceThreshold;
 }
