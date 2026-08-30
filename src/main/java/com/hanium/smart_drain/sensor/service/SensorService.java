@@ -10,6 +10,7 @@ import com.hanium.smart_drain.risk.dto.RiskAnalysisResult;
 import com.hanium.smart_drain.risk.dto.RiskLevel;
 import com.hanium.smart_drain.risk.service.RiskAnalysisService;
 import com.hanium.smart_drain.sensor.dto.SensorHistoryResponse;
+import com.hanium.smart_drain.sensor.dto.LatestSensorReadingResponse;
 import com.hanium.smart_drain.sensor.dto.SensorReadingIngestResponse;
 import com.hanium.smart_drain.sensor.dto.SensorPhotoUploadResponse;
 import com.hanium.smart_drain.sensor.dto.SensorReadingRequest;
@@ -46,12 +47,15 @@ public class SensorService {
     public SensorReadingIngestResponse ingestReading(SensorReadingRequest request) {
         Drain drain = drainRepository.findById(request.getDrainId())
             .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
+        // 기존 컬럼명은 유지하지만 저장값의 의미는 계산된 수위입니다.
+        // waterLevel = drain.totalDepth - ultrasonicDistance
+        Double trashLevel = calculateWaterLevelFromDistance(drain, request.getTrashLevel());
 
         LocalDateTime receivedAt = LocalDateTime.now();
         SensorReading sensorReading = SensorReading.builder()
             .drainId(request.getDrainId())
-            .waterLevel(request.getWaterLevel())
-            .trashLevel(request.getTrashLevel())
+            .trashLevel(trashLevel)
+            .coverDistance(request.getCoverDistance())
             .batteryLevel(request.getBatteryLevel())
             .signalStrength(request.getSignalStrength())
             .measuredAt(request.getMeasuredAt())
@@ -61,8 +65,8 @@ public class SensorService {
 
         RiskAnalysisResult riskResult = riskAnalysisService.analyze(
             request.getDrainId(),
-            request.getWaterLevel(),
-            request.getTrashLevel(),
+            trashLevel,
+            request.getCoverDistance(),
             request.getBatteryLevel(),
             request.getSignalStrength()
         );
@@ -130,17 +134,33 @@ public class SensorService {
             .findByDrainIdAndMeasuredAtBetweenOrderByMeasuredAtDesc(drainId, startTime, endTime)
             .stream()
             .map(reading -> SensorHistoryResponse.builder()
-                .waterLevel(reading.getWaterLevel())
+                .waterLevel(reading.getTrashLevel())
                 .trashLevel(reading.getTrashLevel())
+                .coverDistance(reading.getCoverDistance())
                 .batteryLevel(reading.getBatteryLevel())
                 .measuredAt(reading.getMeasuredAt())
                 .build())
             .toList();
     }
 
-    // TODO: 센서 데이터 수신/저장 로직 구현 예정
-    // TODO: 저장 후 RiskAnalysisService를 통해 위험도 판단 예정
-    // TODO: 최신 측정값 조회 로직 구현 예정
+    @Transactional(readOnly = true)
+    public LatestSensorReadingResponse getLatestReading(Long drainId) {
+        drainRepository.findById(drainId)
+            .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "drain not found"));
+
+        SensorReading reading = sensorReadingRepository
+            .findFirstByDrainIdOrderByMeasuredAtDescReadingIdDesc(drainId)
+            .orElseThrow(() -> new CustomException(ErrorCode.ENTITY_NOT_FOUND, "sensor reading not found"));
+
+        return toLatestResponse(reading);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LatestSensorReadingResponse> getLatestReadings() {
+        return sensorReadingRepository.findLatestReadings().stream()
+            .map(this::toLatestResponse)
+            .toList();
+    }
 
     private void updateDrainStatusByRiskLevel(Drain drain, RiskLevel riskLevel) {
         if (riskLevel == null) {
@@ -154,6 +174,41 @@ public class SensorService {
         if (drain.getStatus() != targetStatus) {
             drain.updateStatus(targetStatus);
         }
+    }
+
+    private LatestSensorReadingResponse toLatestResponse(SensorReading reading) {
+        return LatestSensorReadingResponse.builder()
+            .drainId(reading.getDrainId())
+            .waterLevel(reading.getTrashLevel())
+            .trashLevel(reading.getTrashLevel())
+            .batteryLevel(reading.getBatteryLevel())
+            .signalStrength(reading.getSignalStrength())
+            .measuredAt(reading.getMeasuredAt())
+            .receivedAt(reading.getReceivedAt())
+            .build();
+    }
+
+    private Double calculateWaterLevelFromDistance(Drain drain, Double distanceCm) {
+        if (distanceCm == null) {
+            return null;
+        }
+        if (distanceCm < 0) {
+            return distanceCm;
+        }
+
+        Double totalDepth = drain.getTotalDepth();
+        if (totalDepth == null || totalDepth <= 0) {
+            return distanceCm;
+        }
+
+        double waterLevel = totalDepth - distanceCm;
+        if (waterLevel < 0) {
+            return 0.0;
+        }
+        if (waterLevel > totalDepth) {
+            return totalDepth;
+        }
+        return waterLevel;
     }
 
     private String buildStoredFileName(Long drainId, String originalFilename) {

@@ -11,6 +11,10 @@
 - 자율 출동형 경보 접수/완료 흐름 지원
 - 대시보드 통합 조회 API 제공
 
+초음파 센서가 전송하는 값은 센서에서 수면까지의 거리(cm)입니다. 기존 MQTT
+필드명 `trashLevel`과 DB 컬럼 `trash_level`은 장치 및 스키마 호환을 위해 유지하며,
+저장값과 조회 API의 `waterLevel`은 `빗물받이 전체 높이 - 감지 거리`로 계산합니다.
+
 ## 2. 핵심 도메인 흐름
 
 1. 센서는 위험도를 판단하지 않고 원시 측정값만 전송
@@ -29,6 +33,21 @@
 - Spring Data JPA / Hibernate
 - PostgreSQL
 - Spring Security (구조만 준비, 인증 로직은 TODO)
+
+## 환경변수와 프론트엔드 연결
+
+애플리케이션은 프로젝트 루트의 `.env`를 선택적으로 읽습니다. 프론트엔드 개발
+주소가 기본값과 다르면 다음 값을 추가하세요.
+
+```env
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+```
+
+센서 조회 API:
+
+- `GET /api/v1/sensors/latest`: 시설별 최신 센서 측정값
+- `GET /api/v1/sensors/drains/{drainId}/latest`: 한 시설의 최신 측정값
+- `GET /api/v1/sensors/drains/{drainId}/history`: 기간별 계산 수위 이력
 
 ## 4. 패키지 구조
 

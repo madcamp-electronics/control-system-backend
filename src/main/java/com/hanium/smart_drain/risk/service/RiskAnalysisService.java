@@ -18,8 +18,8 @@ public class RiskAnalysisService {
 
     public RiskAnalysisResult analyze(
         Long drainId,
-        Double waterLevel,
         Double trashLevel,
+        Double coverDistance,
         Double batteryLevel,
         Integer signalStrength
     ) {
@@ -28,6 +28,6 @@ public class RiskAnalysisService {
         // TODO: 위험 시 Alert 생성
         // TODO: Drain 상태 변경
         Drain drain = drainRepository.findById(drainId).orElse(null);
-        return defaultRiskPolicy.evaluate(drain, waterLevel, trashLevel, batteryLevel, signalStrength);
+        return defaultRiskPolicy.evaluate(drain, trashLevel, coverDistance, batteryLevel, signalStrength);
     }
 }

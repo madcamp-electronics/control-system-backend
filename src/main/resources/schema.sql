@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS drains (
     longitude DOUBLE PRECISION NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
     total_depth DOUBLE PRECISION NOT NULL,
-    water_level_threshold DOUBLE PRECISION NOT NULL,
     trash_level_threshold DOUBLE PRECISION NOT NULL,
+    cover_distance_threshold DOUBLE PRECISION NOT NULL DEFAULT 30.0,
     latest_device_photo_url VARCHAR(512) NULL,
     registered_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -40,10 +40,14 @@ CREATE TABLE IF NOT EXISTS drains (
 ALTER TABLE IF EXISTS drains
 ADD COLUMN IF NOT EXISTS latest_device_photo_url VARCHAR(512) NULL;
 
+ALTER TABLE IF EXISTS drains
+ADD COLUMN IF NOT EXISTS cover_distance_threshold DOUBLE PRECISION NOT NULL DEFAULT 30.0;
+
 -- 구버전 스키마 컬럼 정리 (존재할 때만 삭제)
 ALTER TABLE IF EXISTS drains DROP COLUMN IF EXISTS name;
 ALTER TABLE IF EXISTS drains DROP COLUMN IF EXISTS warning_water_level;
 ALTER TABLE IF EXISTS drains DROP COLUMN IF EXISTS danger_water_level;
+ALTER TABLE IF EXISTS drains DROP COLUMN IF EXISTS water_level_threshold;
 ALTER TABLE IF EXISTS drains DROP COLUMN IF EXISTS warning_trash_level;
 ALTER TABLE IF EXISTS drains DROP COLUMN IF EXISTS danger_trash_level;
 ALTER TABLE IF EXISTS drains DROP COLUMN IF EXISTS id;
@@ -53,8 +57,8 @@ ALTER TABLE IF EXISTS drains DROP COLUMN IF EXISTS id;
 CREATE TABLE IF NOT EXISTS sensor_readings (
     reading_id BIGSERIAL PRIMARY KEY,
     drain_id BIGINT NOT NULL,
-    water_level DOUBLE PRECISION NOT NULL,
     trash_level DOUBLE PRECISION NOT NULL,
+    cover_distance DOUBLE PRECISION NULL,
     battery_level DOUBLE PRECISION NOT NULL,
     signal_strength INTEGER NOT NULL,
     measured_at TIMESTAMP NOT NULL,
@@ -63,6 +67,11 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
     CONSTRAINT fk_sensor_readings_drain FOREIGN KEY (drain_id) 
         REFERENCES drains (drain_id) ON DELETE CASCADE
 );
+
+ALTER TABLE IF EXISTS sensor_readings DROP COLUMN IF EXISTS water_level;
+
+ALTER TABLE IF EXISTS sensor_readings
+ADD COLUMN IF NOT EXISTS cover_distance DOUBLE PRECISION NULL;
 
 
 -- 4. 위험 알림 및 정비 이력 통합 테이블 (사진 업로드 포함)

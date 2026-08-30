@@ -1,6 +1,5 @@
 package com.hanium.smart_drain.alert.dto;
 
-import com.hanium.smart_drain.alert.entity.AlertStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,9 +10,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AlertStatusUpdateRequest {
+public class AlertAssignmentRequest {
 
     @NotNull
-    private AlertStatus status;
-
+    private Long workerId;
 }

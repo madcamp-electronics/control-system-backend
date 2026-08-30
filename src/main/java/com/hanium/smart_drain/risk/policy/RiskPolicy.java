@@ -7,8 +7,8 @@ public interface RiskPolicy {
 
     RiskAnalysisResult evaluate(
         Drain drain,
-        Double waterLevel,
         Double trashLevel,
+        Double coverDistance,
         Double batteryLevel,
         Integer signalStrength
     );

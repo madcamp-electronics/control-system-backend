@@ -1,9 +1,8 @@
 package com.hanium.smart_drain.alert.controller;
 
 import com.hanium.smart_drain.alert.dto.AlertListResponse;
+import com.hanium.smart_drain.alert.dto.AlertAssignmentRequest;
 import com.hanium.smart_drain.alert.dto.AlertCompleteResponse;
-import com.hanium.smart_drain.alert.dto.AlertPhotoType;
-import com.hanium.smart_drain.alert.dto.AlertPhotoUploadResponse;
 import com.hanium.smart_drain.alert.dto.AlertStatusUpdateRequest;
 import com.hanium.smart_drain.alert.dto.AlertStatusUpdateResponse;
 import com.hanium.smart_drain.alert.service.AlertService;
@@ -11,8 +10,7 @@ import com.hanium.smart_drain.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,25 +38,36 @@ public class AlertController {
     @PatchMapping("/{alertId}/status")
     public ApiResponse<AlertStatusUpdateResponse> updateAlertStatus(
         @PathVariable("alertId") Long alertId,
-        @Valid @RequestBody AlertStatusUpdateRequest request
+        @Valid @RequestBody AlertStatusUpdateRequest request,
+        Authentication authentication
     ) {
-        return ApiResponse.success(alertService.updateAlertStatus(alertId, request));
+        return ApiResponse.success(alertService.updateAlertStatus(alertId, request, currentUserId(authentication)));
     }
 
-    @PostMapping("/{alertId}/photos")
-    public ResponseEntity<ApiResponse<AlertPhotoUploadResponse>> uploadAlertPhoto(
+    @PatchMapping("/{alertId}/assignment")
+    public ApiResponse<AlertStatusUpdateResponse> assignAlert(
         @PathVariable("alertId") Long alertId,
-        @RequestParam("imageFile") MultipartFile imageFile,
-        @RequestParam("photoType") AlertPhotoType photoType
+        @Valid @RequestBody AlertAssignmentRequest request
     ) {
-        AlertPhotoUploadResponse response = alertService.uploadAlertPhoto(alertId, imageFile, photoType);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+        return ApiResponse.success(alertService.assignAlert(alertId, request.getWorkerId()));
     }
 
-    @PatchMapping("/{alertId}/complete")
-    public ApiResponse<AlertCompleteResponse> completeAlert(
-        @PathVariable("alertId") Long alertId
+    @PostMapping("/{alertId}/complete")
+    public ApiResponse<AlertCompleteResponse> completeAlertWithPhotos(
+        @PathVariable("alertId") Long alertId,
+        @RequestParam("beforeImageFile") MultipartFile beforeImageFile,
+        @RequestParam("afterImageFile") MultipartFile afterImageFile,
+        Authentication authentication
     ) {
-        return ApiResponse.success(alertService.completeAlert(alertId));
+        return ApiResponse.success(alertService.completeAlertWithPhotos(
+            alertId,
+            beforeImageFile,
+            afterImageFile,
+            currentUserId(authentication)
+        ));
+    }
+
+    private Long currentUserId(Authentication authentication) {
+        return Long.valueOf(authentication.getName());
     }
 }

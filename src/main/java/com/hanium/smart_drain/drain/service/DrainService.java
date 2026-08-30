@@ -24,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DrainService {
 
+    private static final double DEFAULT_COVER_DISTANCE_THRESHOLD_CM = 30.0;
+
     private final DrainRepository drainRepository;
     private final AlertRepository alertRepository;
 
@@ -35,8 +37,8 @@ public class DrainService {
             .longitude(request.getLongitude())
             .status(DrainStatus.NORMAL)
             .totalDepth(request.getTotalDepth())
-            .waterLevelThreshold(request.getWaterLevelThreshold())
             .trashLevelThreshold(request.getTrashLevelThreshold())
+            .coverDistanceThreshold(resolveCoverDistanceThreshold(request.getCoverDistanceThreshold()))
             .latestDevicePhotoUrl(null)
             .registeredAt(LocalDateTime.now())
             .build();
@@ -78,14 +80,14 @@ public class DrainService {
 
         drain.updateInfo(
             request.getAddress(),
-            request.getWaterLevelThreshold(),
-            request.getTrashLevelThreshold()
+            request.getTrashLevelThreshold(),
+            resolveCoverDistanceThreshold(request.getCoverDistanceThreshold(), drain.getCoverDistanceThreshold())
         );
 
         return DrainUpdateResponse.builder()
             .drainId(drain.getId())
-            .waterLevelThreshold(drain.getWaterLevelThreshold())
             .trashLevelThreshold(drain.getTrashLevelThreshold())
+            .coverDistanceThreshold(drain.getCoverDistanceThreshold())
             .updatedAt(LocalDateTime.now())
             .build();
     }
@@ -110,8 +112,8 @@ public class DrainService {
             .longitude(saved.getLongitude())
             .status(saved.getStatus())
             .totalDepth(saved.getTotalDepth())
-            .waterLevelThreshold(saved.getWaterLevelThreshold())
             .trashLevelThreshold(saved.getTrashLevelThreshold())
+            .coverDistanceThreshold(saved.getCoverDistanceThreshold())
             .latestDevicePhotoUrl(saved.getLatestDevicePhotoUrl())
             .workPhotos(includeWorkPhotos ? getWorkPhotos(saved.getId()) : List.of())
             .build();
@@ -125,7 +127,22 @@ public class DrainService {
             .longitude(drain.getLongitude())
             .status(drain.getStatus())
             .totalDepth(drain.getTotalDepth())
+            .latestDevicePhotoUrl(drain.getLatestDevicePhotoUrl())
             .build();
+    }
+
+    private Double resolveCoverDistanceThreshold(Double requestedThreshold) {
+        return resolveCoverDistanceThreshold(requestedThreshold, DEFAULT_COVER_DISTANCE_THRESHOLD_CM);
+    }
+
+    private Double resolveCoverDistanceThreshold(Double requestedThreshold, Double fallbackThreshold) {
+        if (requestedThreshold != null) {
+            return requestedThreshold;
+        }
+        if (fallbackThreshold != null) {
+            return fallbackThreshold;
+        }
+        return DEFAULT_COVER_DISTANCE_THRESHOLD_CM;
     }
 
     private List<DrainWorkPhotoResponse> getWorkPhotos(Long drainId) {

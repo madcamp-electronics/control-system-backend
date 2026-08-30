@@ -16,10 +16,15 @@ public class AlertListResponse {
 
     private Long alertId;
     private Long drainId;
+    private Long workerId;
     private String address;
     private Double latitude;
     private Double longitude;
     private AlertType riskLevel;
     private AlertStatus status;
+    private String beforePhotoUrl;
+    private String afterPhotoUrl;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime resolvedAt;
 }

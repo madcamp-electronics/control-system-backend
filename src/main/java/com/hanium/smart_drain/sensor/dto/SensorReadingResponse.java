@@ -14,8 +14,8 @@ public class SensorReadingResponse {
 
     private Long id;
     private Long drainId;
-    private Double waterLevel;
     private Double trashLevel;
+    private Double coverDistance;
     private Double batteryLevel;
     private Integer signalStrength;
     private LocalDateTime measuredAt;

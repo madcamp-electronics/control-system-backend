@@ -78,6 +78,7 @@ public class AuthService {
         );
 
         return LoginResult.builder()
+            .userId(user.getUserId())
             .accessToken(accessToken)
             .refreshToken(refreshTokenValue)
             .username(user.getUsername())
