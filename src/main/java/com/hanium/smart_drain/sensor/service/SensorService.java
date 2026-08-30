@@ -181,6 +181,7 @@ public class SensorService {
             .drainId(reading.getDrainId())
             .waterLevel(reading.getTrashLevel())
             .trashLevel(reading.getTrashLevel())
+            .coverDistance(reading.getCoverDistance())
             .batteryLevel(reading.getBatteryLevel())
             .signalStrength(reading.getSignalStrength())
             .measuredAt(reading.getMeasuredAt())
